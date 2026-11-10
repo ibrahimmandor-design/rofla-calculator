@@ -1,0 +1,63 @@
+name: ROFLA temporary browser test
+
+on:
+  push:
+    branches:
+      - rofla-management-system
+    paths:
+      - 'management/**'
+      - '.github/workflows/rofla-browser-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rofla-management-system
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Start local test server
+        run: |
+          python3 -m http.server 4173 --directory . >/tmp/rofla-server.log 2>&1 &
+          echo $! >/tmp/rofla-server.pid
+      - name: Run desktop and mobile browser smoke tests
+        run: |
+          node --input-type=module <<'EOF'
+          import { chromium, devices } from 'playwright';
+          const browser = await chromium.launch({ headless: true });
+          const errors = [];
+          const checks = [];
+          async function testViewport(name, contextOptions) {
+            const context = await browser.newContext(contextOptions);
+            const page = await context.newPage();
+            page.on('pageerror', e => errors.push(name + ': ' + e.message));
+            const response = await page.goto('http://127.0.0.1:4173/management/', { waitUntil: 'networkidle' });
+            checks.push([name + ' HTTP', response?.status() === 200, String(response?.status())]);
+            checks.push([name + ' title', (await page.title()).length > 0, await page.title()]);
+            checks.push([name + ' tabs', await page.locator('[onclick]').count() > 0, String(await page.locator('[onclick]').count()) + ' onclick controls']);
+            const visibleBody = await page.locator('body').innerText();
+            checks.push([name + ' visible content', visibleBody.trim().length > 100, visibleBody.trim().slice(0,100)]);
+            const buttons = page.locator('button');
+            checks.push([name + ' buttons', await buttons.count() > 0, String(await buttons.count())]);
+            await context.close();
+          }
+          await testViewport('Desktop', { viewport: { width: 1440, height: 900 } });
+          await testViewport('iPhone', { ...devices['iPhone 13'] });
+          await browser.close();
+          for (const [label, ok, detail] of checks) console.log((ok ? 'PASS ' : 'FAIL ') + label + ' — ' + detail);
+          if (errors.length) console.log('BROWSER ERRORS: ' + errors.join(' | '));
+          const failed = checks.filter(x => !x[1]).length + errors.length;
+          console.log('RESULT: ' + (failed ? 'FAIL' : 'PASS') + ' (' + checks.length + ' checks, ' + errors.length + ' JS errors)');
+          if (failed) process.exit(1);
+          EOF
