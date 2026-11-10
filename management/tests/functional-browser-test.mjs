@@ -143,10 +143,11 @@ async function runScenario(name, contextOptions) {
     net: document.getElementById('rNet').textContent,
     audit: document.getElementById('dataAudit').innerText
   }));
-  check('report revenue', report.sales === money(10), report.sales);
-  check('report COGS', report.cogs === money(2), report.cogs);
-  check('report expenses and waste', report.expenses === money(2) && report.waste === money(1), report.expenses + ' / ' + report.waste);
-  check('report net profit', report.net === money(5), report.net);
+  const expectedMoney = await page.evaluate(() => ({ sales: money(10), cogs: money(2), expenses: money(2), waste: money(1), net: money(5) }));
+  check('report revenue', report.sales === expectedMoney.sales, report.sales);
+  check('report COGS', report.cogs === expectedMoney.cogs, report.cogs);
+  check('report expenses and waste', report.expenses === expectedMoney.expenses && report.waste === expectedMoney.waste, report.expenses + ' / ' + report.waste);
+  check('report net profit', report.net === expectedMoney.net, report.net);
   check('data audit', report.audit.includes('لم يظهر خطأ واضح'), report.audit.slice(0,120));
 
   // Verify local persistence after a reload.
