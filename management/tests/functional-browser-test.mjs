@@ -10,7 +10,7 @@ async function runScenario(name, contextOptions) {
   const jsErrors = [];
   page.on('pageerror', error => jsErrors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
-  await page.goto('http://127.0.0.1:4173/management/', { waitUntil: 'domcontentloaded' });
+  await page.goto(process.env.ROFLA_BASE_URL || 'http://127.0.0.1:4173/management/', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => { localStorage.clear(); });
   await page.reload({ waitUntil: 'domcontentloaded' });
 
