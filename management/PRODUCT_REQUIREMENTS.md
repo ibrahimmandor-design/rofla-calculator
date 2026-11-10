@@ -99,3 +99,11 @@ The chef can record production without feeling lost. The owner can open the phon
 - Supplier settlements allocate against the oldest recorded outstanding purchase first. Settlement is not treated as a new operating expense, preventing double counting of the purchase cost.
 - Legacy purchases without a recorded paid amount are excluded from supplier debt totals; their payment status is unknown and must not be guessed.
 - These additions remain local to the current browser profile and do not create cross-device synchronization.
+
+
+## Cash drawer and transaction integrity
+- Cash sales increase the drawer; card, bank transfer, and app sales do not.
+- Cash purchases, cash expenses, supplier settlements, and cash refunds decrease the drawer. Non-cash payment methods do not.
+- The owner sets one opening cash balance, can record manual cash in/out, and can reconcile the physical count. Differences are recorded as auditable adjustment movements.
+- The cash drawer begins from its explicitly entered opening balance; historic cash movements are not inferred.
+- Production must validate all quantities and yield before any stock mutation. Duplicate recipe lines for the same raw material are aggregated before checking available stock, preventing overdraw.
