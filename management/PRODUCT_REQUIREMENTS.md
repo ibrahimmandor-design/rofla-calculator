@@ -72,3 +72,13 @@ ROFLA is a practical daily notebook and calculator for a real Egyptian sweets sh
 
 ## Definition of success
 The chef can record production without feeling lost. The owner can open the phone and immediately understand what came in, what was used, what was made, what sold, what remains, what needs buying, and how the shop is doing today and this month.
+
+## ROFLA's actual operating model
+- ROFLA is both a small production kitchen and a retail sweets/bakery shop in the **same physical location**.
+- Treat it as one location and one shared stock ledger; do not create separate factory/shop warehouses or internal transfers.
+- Support three product groups: eastern sweets, western sweets, and simple bakery items.
+- Support two supply methods per product: made in the shop (recipe, raw-material use and production output) or bought ready from a supplier (purchase directly increases finished-product stock).
+- The daily interface stays small. The owner sees management details; the chef sees only the simple actions needed to prepare and record production. This is not employee surveillance: no performance scores, monitoring dashboard or staff-account system.
+- Expense categories should cover rent, electricity, gas, water, wages, cleaning, maintenance, packaging, delivery, app commissions, marketing, licenses, internet/phone, bank fees and other costs.
+- Cost and profit reporting must separate direct product cost from shop operating expenses. Any allocation of shared monthly overhead to products must be transparent, configurable and counted exactly once. Show the allocation method; do not pretend an estimate is an exact product cost.
+- Competitor comparison uses observed or publicly listed prices for equivalent products and comparable weights/sizes. Record competitor, date, size, price and source note. It can show whether ROFLA's price is higher/lower/close, but must never claim to know competitors' actual sales, costs or profits.
