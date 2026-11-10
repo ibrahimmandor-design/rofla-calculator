@@ -1,0 +1,33 @@
+name: ROFLA production browser verification
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'management/**'
+      - '.github/workflows/rofla-production-browser-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  production-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright and Chromium
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Verify live production app on desktop and iPhone
+        env:
+          ROFLA_BASE_URL: https://ibrahimmandor-design.github.io/rofla-calculator/management/
+        run: node management/tests/functional-browser-test.mjs
