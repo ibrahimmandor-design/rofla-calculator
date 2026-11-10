@@ -30,6 +30,13 @@
 <div id="authSignedIn" class="hidden">
 <p id="authIdentity" class="muted"></p>
 <button class="soft" id="syncNow" type="button">تحديث البيانات من السحابة</button>
+<button class="soft" id="showChangePassword" type="button">تغيير كلمة المرور</button>
+<div id="signedInPasswordBox" class="hidden" style="margin-top:12px">
+ <div class="field"><label>كلمة المرور الجديدة</label><input id="signedInNewPassword" type="password" autocomplete="new-password" placeholder="8 أحرف على الأقل"></div>
+ <div class="field"><label>تأكيد كلمة المرور</label><input id="signedInConfirmPassword" type="password" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور"></div>
+ <button class="primary" id="updateSignedInPassword" type="button">حفظ كلمة المرور الجديدة</button>
+ <p id="signedInPasswordMessage" class="muted"></p>
+</div>
 <button class="soft" id="signOut" type="button">تسجيل الخروج</button>
 <p id="syncMessage" class="muted"></p>
 </div>
@@ -131,6 +138,20 @@ document.getElementById('passwordLogin').addEventListener('click',async()=>{
  setAuthMessage('جاري التحقق من بيانات الدخول...');
  const {data,error}=await supabaseClient.auth.signInWithPassword({email:ROFLA_EMAIL,password});
  setAuthMessage(error?'تعذر تسجيل الدخول: '+error.message:'تم التحقق من الحساب، جاري تحميل بيانات ROFLA...');
+});
+document.getElementById('showChangePassword').addEventListener('click',()=>{
+ document.getElementById('signedInPasswordBox').classList.toggle('hidden');
+});
+document.getElementById('updateSignedInPassword').addEventListener('click',async()=>{
+ const p=document.getElementById('signedInNewPassword').value||'';
+ const q=document.getElementById('signedInConfirmPassword').value||'';
+ const m=document.getElementById('signedInPasswordMessage');
+ if(p.length<8){m.textContent='كلمة المرور لازم تكون 8 أحرف على الأقل.';return;}
+ if(p!==q){m.textContent='كلمتا المرور غير متطابقتين.';return;}
+ m.textContent='جاري تحديث كلمة المرور...';
+ const {error}=await supabaseClient.auth.updateUser({password:p});
+ m.textContent=error?'تعذر تحديث كلمة المرور: '+error.message:'تم تغيير كلمة المرور بنجاح. استخدمها في تسجيل الدخول القادم.';
+ if(!error){document.getElementById('signedInNewPassword').value='';document.getElementById('signedInConfirmPassword').value='';}
 });
 document.getElementById('signOut').addEventListener('click',async()=>{cloudReady=false;await supabaseClient.auth.signOut();showAuthState(null);});
 document.getElementById('syncNow').addEventListener('click',async()=>{cloudReady=false;setSyncMessage('جاري تحديث البيانات...');try{await loadCloudData()}catch(e){setSyncMessage('تعذر التحديث: '+e.message)}});
