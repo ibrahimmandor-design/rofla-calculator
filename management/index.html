@@ -10,8 +10,22 @@
 @media print{body{background:white}header,.tabs,footer,.notice,button,.field{display:none!important}.wrap{max-width:none;padding:0}.panel{display:none!important}#reports.panel{display:block!important}.card{break-inside:avoid;border:0}#reports .card{display:block}#reports .grid{display:grid}}\n</style></head>
 <body>
 <header><h1>رفلا | إدارة المحل</h1><p>من شراء الخامات لحد البيع والمكسب — ببساطة</p></header>
-<main class="wrap">
-<div class="notice"><b>نسخة محلية بدون حسابات خارجية:</b> البيانات محفوظة على نفس المتصفح والجهاز. استخدم النسخة الاحتياطية بانتظام؛ نقل البيانات لجهاز آخر يتم عن طريق تصدير الملف ثم استيراده هناك. لا توجد مزامنة تلقائية بين الأجهزة حالياً.</div>
+<main class="wrap">\n<section id="authGate" class="card" style="max-width:520px;margin:18px auto">
+<h2>الدخول إلى حساب ROFLA المشترك</h2>
+<p class="muted">الموقع متاح للجميع، لكن بيانات المحل لا تظهر إلا بعد تسجيل الدخول بالبريد المصرّح به.</p>
+<div id="authSignedOut">
+<div class="field"><label>البريد الإلكتروني المصرّح به</label><input id="authEmail" type="email" value="Ibrahimmandor@icloud.com" readonly></div>
+<button class="primary" id="sendMagicLink" type="button">إرسال رابط الدخول إلى بريدي</button>
+<p id="authMessage" class="muted">هنبعتلك رابط تحقق على بريد iCloud. افتحه من نفس الجهاز.</p>
+</div>
+<div id="authSignedIn" class="hidden">
+<p id="authIdentity" class="muted"></p>
+<button class="soft" id="syncNow" type="button">تحديث البيانات من السحابة</button>
+<button class="soft" id="signOut" type="button">تسجيل الخروج</button>
+<p id="syncMessage" class="muted"></p>
+</div>
+</section>
+<div class="notice" id="cloudNotice"><b>ROFLA Cloud:</b> سجّل الدخول بالبريد المعتمد لمزامنة بيانات المحل بين أجهزتك.</div>
 <nav class="tabs">
 <button class="tab active" data-tab="home">الرئيسية</button><button class="tab" data-tab="buy">شراء خامات</button><button class="tab" data-tab="make">إنتاج</button><button class="tab" data-tab="sell">بيع</button><button class="tab" data-tab="returns">مرتجع</button><button class="tab" data-tab="expense">مصروف</button><button class="tab" data-tab="cash">درج النقدية</button><button class="tab" data-tab="items">الأصناف والوصفات</button><button class="tab" data-tab="stock">المخزون</button><button class="tab" data-tab="market">السوق</button><button class="tab" data-tab="reports">التكلفة والمكسب</button>
 </nav>
@@ -42,6 +56,72 @@
 </main>
 <script>
 const KEY='rofla_mvp_v1';
+const SUPABASE_URL='https://tpcwyacybpwonsyuegjw.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_SSidbj0latH37a5vQHUsuQ_JU5OWiFi';
+const ROFLA_EMAIL='ibrahimmandor@icloud.com';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let cloudRevision=0,cloudReady=false,cloudBusy=false,cloudQueue=Promise.resolve(),suppressCloud=false;
+function setAuthMessage(s){const e=document.getElementById('authMessage');if(e)e.textContent=s}
+function setSyncMessage(s){const e=document.getElementById('syncMessage');if(e)e.textContent=s}
+function showAuthState(session){
+ const signed=!!session;
+ document.getElementById('authSignedOut').classList.toggle('hidden',signed);
+ document.getElementById('authSignedIn').classList.toggle('hidden',!signed);
+ document.querySelector('.tabs').classList.toggle('hidden',!signed);
+ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',!signed));
+ document.getElementById('authIdentity').textContent=signed?'تم تسجيل الدخول: '+session.user.email:'';
+}
+async function loadCloudData(){
+ const {data,error}=await supabaseClient.from('rofla_store').select('data,revision').eq('id',1).single();
+ if(error)throw error;
+ cloudRevision=Number(data.revision)||0;
+ const remote=data.data||{};
+ const localHasData=Object.values(db).some(v=>Array.isArray(v)?v.length>0:(v&&typeof v==='object'?Object.keys(v).length>0:!!v));
+ const remoteHasData=Object.keys(remote).length>0;
+ if(!remoteHasData&&localHasData){
+   await persistCloudData();
+ }else{
+   suppressCloud=true;db=normalizeDB(remote);localStorage.setItem(KEY,JSON.stringify(db));suppressCloud=false;renderAll();
+ }
+ cloudReady=true;setSyncMessage('متصل بالسحابة — آخر إصدار '+cloudRevision);
+}
+function persistCloudData(){
+ cloudQueue=cloudQueue.then(async()=>{
+  if(!cloudReady||suppressCloud)return;
+  const snapshot=JSON.parse(JSON.stringify(db));
+  const {data,error}=await supabaseClient.rpc('save_rofla_data',{p_data:snapshot,p_expected_revision:cloudRevision});
+  if(error){
+   if(String(error.message||'').includes('ROFLA_CONFLICT')){
+    cloudReady=false;setSyncMessage('فيه تعديل أحدث من جهاز آخر. أوقفنا الحفظ مؤقتًا لحماية البيانات؛ حدّث البيانات من السحابة قبل المتابعة.');
+    return;
+   }
+   setSyncMessage('تعذر الحفظ السحابي: '+error.message);return;
+  }
+  cloudRevision=Number(data);setSyncMessage('تم حفظ التغييرات سحابيًا — الإصدار '+cloudRevision);
+ }).catch(e=>setSyncMessage('خطأ في المزامنة: '+e.message));
+ return cloudQueue;
+}
+async function handleCloudSession(session){
+ if(session&&session.user&&String(session.user.email||'').toLowerCase()!==ROFLA_EMAIL){
+  await supabaseClient.auth.signOut();showAuthState(null);setAuthMessage('هذا البريد غير مصرح له باستخدام بيانات ROFLA.');return;
+ }
+ showAuthState(session);
+ if(session){
+  cloudReady=false;setSyncMessage('جاري تحميل بيانات المحل...');
+  try{await loadCloudData();document.getElementById('cloudNotice').textContent='بيانات ROFLA متصلة بالسحابة ومتاحة على أجهزتك بعد تسجيل الدخول.'}
+  catch(e){setSyncMessage('فشل الاتصال بقاعدة البيانات: '+e.message)}
+ }
+}
+document.getElementById('sendMagicLink').addEventListener('click',async()=>{
+ setAuthMessage('جاري إرسال رابط الدخول...');
+ const {error}=await supabaseClient.auth.signInWithOtp({email:ROFLA_EMAIL,options:{emailRedirectTo:location.origin+location.pathname}});
+ setAuthMessage(error?'تعذر إرسال الرابط: '+error.message:'تم إرسال رابط الدخول إلى '+ROFLA_EMAIL+'. افتح الرسالة واضغط الرابط من نفس الجهاز.');
+});
+document.getElementById('signOut').addEventListener('click',async()=>{cloudReady=false;await supabaseClient.auth.signOut();showAuthState(null);});
+document.getElementById('syncNow').addEventListener('click',async()=>{cloudReady=false;setSyncMessage('جاري تحديث البيانات...');try{await loadCloudData()}catch(e){setSyncMessage('تعذر التحديث: '+e.message)}});
+supabaseClient.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>handleCloudSession(session),0)});
+supabaseClient.auth.getSession().then(({data})=>handleCloudSession(data.session));
+
 const DB_ARRAYS=['items','purchases','supplierPayments','cashMovements','cashCounts','productions','sales','returns','expenses','market','movements'];
 const emptyDB=()=>({items:[],stock:{},purchases:[],supplierPayments:[],cashMovements:[],cashCounts:[],cashOpening:0,cashOpeningSet:false,productions:[],sales:[],returns:[],expenses:[],market:[],movements:[]});
 function normalizeDB(source){if(!source||typeof source!=='object'||Array.isArray(source))throw new Error('invalid data');const base=emptyDB(),out={...base,...source};DB_ARRAYS.forEach(k=>{if(!Array.isArray(out[k]))out[k]=[]});if(!out.stock||typeof out.stock!=='object'||Array.isArray(out.stock))out.stock={};if(!Number.isFinite(Number(out.cashOpening))||Number(out.cashOpening)<0)out.cashOpening=0;out.cashOpening=Number(out.cashOpening);out.cashOpeningSet=!!out.cashOpeningSet;return out}
@@ -50,7 +130,7 @@ let db=loadDB();
 function exportBackup(){try{const payload={app:'ROFLA',formatVersion:1,exportedAt:new Date().toISOString(),data:db};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rofla-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);document.getElementById('backupStatus').textContent='تم تجهيز النسخة الاحتياطية للتنزيل.'}catch(e){alert('حصلت مشكلة أثناء تجهيز النسخة الاحتياطية')}}
 function importBackup(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const payload=JSON.parse(String(reader.result||''));const incoming=payload&&payload.app==='ROFLA'&&payload.formatVersion===1?payload.data:null;if(!incoming)throw new Error('invalid');const restored=normalizeDB(incoming);if(!confirm('استرجاع النسخة هيستبدل البيانات الموجودة حالياً على الجهاز. متأكد؟'))return;db=restored;save();document.getElementById('backupStatus').textContent='تم استرجاع النسخة الاحتياطية بنجاح.';alert('تم استرجاع بيانات رفلا')}catch(e){alert('الملف مش نسخة احتياطية صحيحة من نظام رفلا')}finally{event.target.value=''}};reader.onerror=()=>alert('تعذر قراءة الملف');reader.readAsText(file)}
 
-function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();if(cloudReady&&!suppressCloud)persistCloudData()}
 function moveStock(name,kind,qty,unit,reason,ref,stockKey){db.movements=db.movements||[];db.movements.unshift({id:id(),name,kind,qty,unit,reason,ref,stockKey:stockKey||null,date:new Date().toISOString()})}
 function syncCountUnit(){let s=db.stock[val('countStock')];set('countUnit',s?s.unit:'')}
 function saveStockCount(){let key=val('countStock'),s=db.stock[key],actual=num('countQty');if(!s||val('countQty')===''||actual<0)return alert('اختار صنف واكتب الرصيد الفعلي');let delta=actual-s.qty;if(Math.abs(delta)<0.0000001)return alert('الرصيد الفعلي مطابق للرصيد المسجل؛ مفيش فرق للتسوية');if(!confirm('الرصيد المسجل '+s.qty+' '+s.unit+' والفعلي '+actual+' '+s.unit+'. هنسجل فرق '+delta+' '+s.unit+'. نكمل؟'))return;s.qty=actual;moveStock(s.name,'تسوية جرد',delta,s.unit,val('countNote').trim()||'تسوية بعد الجرد',null,key);clear(['countQty','countNote']);save();alert('تم حفظ الجرد وتسجيل فرق المخزون')}
