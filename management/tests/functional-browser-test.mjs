@@ -19,11 +19,14 @@ async function runScenario(name, contextOptions) {
     results.push('PASS ' + name + ' ' + label + (detail ? ' — ' + detail : ''));
   };
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
+  const tab = async (id) => page.evaluate(id => showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
 
   // Cash opening balance and a real multi-line-capable purchase invoice form.
+  await tab('cash');
   await fill('cashOpeningInput', 40);
   await page.evaluate(() => setCashOpening());
+  await tab('buy');
   await page.evaluate(() => addPurchaseInvoiceRow());
   await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
   await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
@@ -38,6 +41,7 @@ async function runScenario(name, contextOptions) {
   check('purchase cash movement', d.cashMovements.filter(x => x.kind === 'out').reduce((n,x)=>n+x.amount,0) === 40, '40 EGP paid from drawer');
 
   // Create product and recipe through the actual item form.
+  await tab('items');
   await fill('itemName', 'بسبوسة اختبار');
   await page.locator('#itemType').selectOption('made');
   await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
@@ -51,6 +55,7 @@ async function runScenario(name, contextOptions) {
   check('item and recipe', !!product && product.recipe.length === 1, 'product and recipe stored');
 
   // Produce 10: 7 saleable, 2 reusable leftovers, 1 waste.
+  await tab('make');
   await page.locator('#makeItem').selectOption(product.id);
   await page.evaluate(() => renderRecipeInputs());
   await fill('makeOutput', 10);
@@ -65,6 +70,7 @@ async function runScenario(name, contextOptions) {
   check('production leftovers and waste', d.stock['خامة:بواقي: بسبوسة اختبار']?.qty === 2 && d.productions[0].wasteCost === 1, '2 leftovers; waste cost 1 EGP');
 
   // Reuse the leftovers as a recipe ingredient in a second product.
+  await tab('items');
   await fill('itemName', 'كنافة اختبار');
   await page.locator('#itemType').selectOption('made');
   await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
@@ -75,6 +81,7 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => addItem());
   d = await state();
   const secondProduct = d.items.find(x => x.name === 'كنافة اختبار');
+  await tab('make');
   await page.locator('#makeItem').selectOption(secondProduct.id);
   await page.evaluate(() => renderRecipeInputs());
   await fill('makeOutput', 5);
@@ -85,6 +92,7 @@ async function runScenario(name, contextOptions) {
   check('leftovers reuse', d.stock['خامة:بواقي: بسبوسة اختبار']?.qty === 0 && d.stock['منتج:كنافة اختبار']?.qty === 5, 'leftovers consumed by next recipe');
 
   // Sale, return and expense through the actual entry functions.
+  await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
   await page.locator('#sellUnit').selectOption({ label: 'قطعة' });
   await fill('sellQty', 3);
@@ -94,6 +102,7 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('sale', d.sales.length === 1 && d.stock['منتج:بسبوسة اختبار'].qty === 4, '3 pieces sold; 15 EGP collected');
 
+  await tab('returns');
   await page.locator('#returnItem').selectOption(product.id);
   await fill('returnQty', 1);
   await fill('returnAmount', 5);
@@ -102,6 +111,7 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('return', d.returns.length === 1 && d.stock['منتج:بسبوسة اختبار'].qty === 5 && d.returns[0].cost === 1, '1 piece returned; 5 EGP refunded');
 
+  await tab('expense');
   await fill('expAmount', 2);
   await page.locator('#expPayMethod').selectOption('cash');
   await page.evaluate(() => addExpense());
@@ -109,6 +119,7 @@ async function runScenario(name, contextOptions) {
   check('expense', d.expenses.length === 1 && d.expenses[0].amount === 2, '2 EGP expense saved');
 
   // Physical stock count adjustment.
+  await tab('stock');
   await page.locator('#countStock').selectOption('خامة:دقيق اختبار');
   await fill('countQty', 1.4);
   await page.evaluate(() => saveStockCount());
@@ -118,6 +129,7 @@ async function runScenario(name, contextOptions) {
   // Cash drawer and monthly report must reconcile to the known scenario.
   const cash = await page.evaluate(() => cashExpected());
   check('cash drawer', Math.abs(cash - 8) < 0.0001, 'expected cash 8 EGP');
+  await tab('reports');
   await page.evaluate(() => {
     document.getElementById('reportMode').value = 'month';
     document.getElementById('reportDate').value = new Date().toISOString().slice(0,10);
