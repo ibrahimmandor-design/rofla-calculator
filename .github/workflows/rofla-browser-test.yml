@@ -61,3 +61,6 @@ jobs:
           console.log('RESULT: ' + (failed ? 'FAIL' : 'PASS') + ' (' + checks.length + ' checks, ' + errors.length + ' JS errors)');
           if (failed) process.exit(1);
           EOF
+
+      - name: Run end-to-end business workflow tests
+        run: node management/tests/functional-browser-test.mjs
