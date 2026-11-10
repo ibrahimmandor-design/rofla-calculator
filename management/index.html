@@ -76,6 +76,7 @@ for(let r of rows){
  if(stockQty===null)return alert('وحدة '+name+' في الشراء ('+unit+') مختلفة عن وحدة المخزون ('+stockUnit+') ومفيش تحويل معروف بينهم');
  lines.push({kind,name,qty,unit,stockQty,stockUnit,cost,low:low===''?null:Number(low),key});total+=cost
 }
+let unitByKey={};for(let line of lines){if(unitByKey[line.key]&&unitByKey[line.key]!==line.stockUnit)return alert('نفس الصنف اتسجل بأكتر من وحدة في الفاتورة؛ وحّد الوحدة في كل السطور قبل الحفظ');unitByKey[line.key]=line.stockUnit;}
 let paidRaw=val('purchaseInvoicePaid'),paid=paidRaw===''?(payMethod==='credit'?0:total):Number(paidRaw);
 if(!Number.isFinite(paid)||paid<0||paid>total)return alert('المدفوع لازم يكون من صفر لإجمالي الفاتورة');
 let date=new Date().toISOString();
