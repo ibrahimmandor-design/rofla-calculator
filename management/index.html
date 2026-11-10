@@ -98,4 +98,5 @@ function printReport(){window.print()}
 function fillSelect(id,items){let e=document.getElementById(id),old=e.value;e.innerHTML=items.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('')||'<option value="">أضف صنف أولاً</option>';if(items.some(x=>x.id===old))e.value=old}
 function set(id,v){document.getElementById(id).textContent=v}function setHTML(id,v){document.getElementById(id).innerHTML=v}
 renderAll();
+if(document.getElementById('saleInvoiceRows')&&!document.querySelector('.sale-invoice-row'))addSaleInvoiceRow();
 </script></body></html>
