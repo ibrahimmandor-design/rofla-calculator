@@ -17,7 +17,15 @@
 <div class="field"><label>اسم المستخدم</label><input id="authUsername" type="text" value="ROFLA" autocomplete="username" autocapitalize="none"></div>
 <div class="field"><label>كلمة المرور</label><input id="authPassword" type="password" placeholder="اكتب كلمة المرور" autocomplete="current-password"></div>
 <button class="primary" id="passwordLogin" type="button">تسجيل الدخول</button>
-<p id="authMessage" class="muted">استخدم اسم المستخدم ROFLA وكلمة المرور التي سيتم إعدادها لحسابك.</p>
+<button class="soft" id="forgotPassword" type="button" style="margin-top:8px;width:100%">نسيت كلمة المرور؟ إرسال رابط استعادة</button>
+<p id="authMessage" class="muted">استخدم اسم المستخدم ROFLA وكلمة المرور الخاصة بحسابك.</p>
+<div id="passwordRecovery" class="hidden">
+ <h3>تعيين كلمة مرور جديدة</h3>
+ <div class="field"><label>كلمة المرور الجديدة</label><input id="newPassword" type="password" autocomplete="new-password" placeholder="8 أحرف على الأقل"></div>
+ <div class="field"><label>تأكيد كلمة المرور</label><input id="confirmNewPassword" type="password" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور"></div>
+ <button class="primary" id="saveNewPassword" type="button">حفظ كلمة المرور الجديدة</button>
+ <p id="recoveryMessage" class="muted"></p>
+</div>
 </div>
 <div id="authSignedIn" class="hidden">
 <p id="authIdentity" class="muted"></p>
@@ -126,7 +134,41 @@ document.getElementById('passwordLogin').addEventListener('click',async()=>{
 });
 document.getElementById('signOut').addEventListener('click',async()=>{cloudReady=false;await supabaseClient.auth.signOut();showAuthState(null);});
 document.getElementById('syncNow').addEventListener('click',async()=>{cloudReady=false;setSyncMessage('جاري تحديث البيانات...');try{await loadCloudData()}catch(e){setSyncMessage('تعذر التحديث: '+e.message)}});
-supabaseClient.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>handleCloudSession(session),0)});
+let passwordRecoveryMode=false;
+document.getElementById('forgotPassword').addEventListener('click',async()=>{
+ setAuthMessage('جاري إرسال رابط استعادة كلمة المرور إلى بريدك...');
+ const {error}=await supabaseClient.auth.resetPasswordForEmail(ROFLA_EMAIL,{redirectTo:window.location.href});
+ setAuthMessage(error?'تعذر إرسال رابط الاستعادة: '+error.message:'تم إرسال رابط الاستعادة إلى '+ROFLA_EMAIL+'. افتح الرسالة واضغط الرابط لتعيين كلمة مرور جديدة.');
+});
+document.getElementById('saveNewPassword').addEventListener('click',async()=>{
+ const password=document.getElementById('newPassword').value||'';
+ const confirm=document.getElementById('confirmNewPassword').value||'';
+ const msg=document.getElementById('recoveryMessage');
+ if(password.length<8){msg.textContent='كلمة المرور لازم تكون 8 أحرف على الأقل.';return;}
+ if(password!==confirm){msg.textContent='كلمتا المرور غير متطابقتين.';return;}
+ msg.textContent='جاري حفظ كلمة المرور...';
+ const {error}=await supabaseClient.auth.updateUser({password});
+ if(error){msg.textContent='تعذر تحديث كلمة المرور: '+error.message;return;}
+ passwordRecoveryMode=false;
+ document.getElementById('passwordRecovery').classList.add('hidden');
+ document.getElementById('authSignedOut').classList.remove('hidden');
+ setAuthMessage('تم تغيير كلمة المرور بنجاح. يمكنك الآن استخدام ROFLA وكلمة المرور الجديدة.');
+ document.getElementById('newPassword').value='';
+ document.getElementById('confirmNewPassword').value='';
+});
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+ if(event==='PASSWORD_RECOVERY'){
+  passwordRecoveryMode=true;
+  document.getElementById('authSignedOut').classList.add('hidden');
+  document.getElementById('authSignedIn').classList.add('hidden');
+  document.getElementById('passwordRecovery').classList.remove('hidden');
+  document.querySelector('.tabs').classList.add('hidden');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('recoveryMessage').textContent='اكتب كلمة مرور جديدة مرتين ثم اضغط حفظ.';
+  return;
+ }
+ if(!passwordRecoveryMode)setTimeout(()=>handleCloudSession(session),0);
+});
 supabaseClient.auth.getSession().then(({data})=>handleCloudSession(data.session));
 
 const DB_ARRAYS=['items','purchases','supplierPayments','cashMovements','cashCounts','productions','sales','returns','expenses','market','movements'];
