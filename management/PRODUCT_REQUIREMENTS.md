@@ -107,3 +107,4 @@ The chef can record production without feeling lost. The owner can open the phon
 - The owner sets one opening cash balance, can record manual cash in/out, and can reconcile the physical count. Differences are recorded as auditable adjustment movements.
 - The cash drawer begins from its explicitly entered opening balance; historic cash movements are not inferred.
 - Production must validate all quantities and yield before any stock mutation. Duplicate recipe lines for the same raw material are aggregated before checking available stock, preventing overdraw.
+\n\n### مشتريات بفواتير وبدون فواتير\n- يجب السماح بتسجيل مشتريات الموردين حتى عند عدم وجود فاتورة رسمية.\n- نوع المستند يحدد إلى «معايا فاتورة» أو «شراء بدون فاتورة»؛ رقم الفاتورة اختياري ولا يُختلق رقم عند غيابه.\n- في الحالتين تُسجل الكمية والتكلفة والمورد إن عُرف وطريقة الدفع والمدفوع والمتبقي، وتُحدّث حركة المخزون.\n- يجب تمييز المشتريات بدون فاتورة في سجل المشتريات والتقارير للمراجعة.\n
