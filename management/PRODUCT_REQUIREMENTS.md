@@ -82,3 +82,11 @@ The chef can record production without feeling lost. The owner can open the phon
 - Expense categories should cover rent, electricity, gas, water, wages, cleaning, maintenance, packaging, delivery, app commissions, marketing, licenses, internet/phone, bank fees and other costs.
 - Cost and profit reporting must separate direct product cost from shop operating expenses. Any allocation of shared monthly overhead to products must be transparent, configurable and counted exactly once. Show the allocation method; do not pretend an estimate is an exact product cost.
 - Competitor comparison uses observed or publicly listed prices for equivalent products and comparable weights/sizes. Record competitor, date, size, price and source note. It can show whether ROFLA's price is higher/lower/close, but must never claim to know competitors' actual sales, costs or profits.
+
+
+## Local-only operating phase (no cloud account)
+- The current implementation remains browser-local with manual JSON backup and restore; synchronization is intentionally deferred until the owner reviews options.
+- Inventory count records physical-vs-book differences as auditable stock adjustments.
+- Production records gross output, saleable output, waste, and reusable leftovers separately; only saleable output enters finished-goods stock.
+- Sales returns add returned quantities back to stock and reduce net revenue; the current version validates total returns against total sold quantity by product, but does not yet link returns to a specific invoice.
+- Stock movement history records purchases, production consumption/output, sales, returns, and stock-count adjustments.
