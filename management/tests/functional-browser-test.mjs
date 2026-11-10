@@ -27,7 +27,6 @@ async function runScenario(name, contextOptions) {
   await fill('cashOpeningInput', 40);
   await page.evaluate(() => setCashOpening());
   await tab('buy');
-  await page.evaluate(() => addPurchaseInvoiceRow());
   await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
   await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
   await page.locator('.purchase-invoice-row').last().locator('.pi-qty').fill('2');
