@@ -90,3 +90,12 @@ The chef can record production without feeling lost. The owner can open the phon
 - Production records gross output, saleable output, waste, and reusable leftovers separately; only saleable output enters finished-goods stock.
 - Sales returns add returned quantities back to stock and reduce net revenue; the current version validates total returns against total sold quantity by product, but does not yet link returns to a specific invoice.
 - Stock movement history records purchases, production consumption/output, sales, returns, and stock-count adjustments.
+
+
+## Completed local-phase additions
+- Daily and monthly reporting can be switched by date; the selected report can be printed from the browser.
+- Purchase entries can record the amount paid immediately, including partial or zero payment for credit purchases.
+- Supplier outstanding balances are summarized by supplier.
+- Supplier settlements allocate against the oldest recorded outstanding purchase first. Settlement is not treated as a new operating expense, preventing double counting of the purchase cost.
+- Legacy purchases without a recorded paid amount are excluded from supplier debt totals; their payment status is unknown and must not be guessed.
+- These additions remain local to the current browser profile and do not create cross-device synchronization.
