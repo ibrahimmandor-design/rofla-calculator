@@ -332,6 +332,7 @@ async function runScenario(name, contextOptions) {
     document.getElementById('reportMode').value='month';
     window.renderReports();
   });
+  await tab('expense');
   await page.locator('#recType').selectOption({ label: 'أخرى' });
   await fill('recCustomType', 'صيانة مخصصة');
   await fill('recAmount', 50);
