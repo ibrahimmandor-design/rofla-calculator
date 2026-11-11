@@ -9,7 +9,11 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V25/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FULL_HANDOVER_V27/.test(html)],
+  ['complete purchase-to-sale traceability columns are present', /قيمة المشتريات/.test(html) && /المرتجعات/.test(html) && /صافي المباع/.test(html) && /قيمة المخزون المتبقي/.test(html) && /function renderFlowSummary\(/.test(html)],
+  ['supplier and customer inputs support saved choices and free typing', /buySupplier[\s\S]{0,180}اسم المورد/.test(html) && /roflaSupplierChoices/.test(html) && /roflaCustomerChoices/.test(html) && /setAttribute\('list','roflaSupplierChoices'\)/.test(html)],
+  ['fixed overhead is separated and allocated to each sold unit', /function getPeriodOverheadSplit\(/.test(html) && /function overheadShareForProduct\(/.test(html) && /المصاريف الثابتة للوحدة/.test(html) && /نصيبه من المصاريف الثابتة/.test(html)],
+  ['custom expense names can be entered for one-off and recurring costs', /id="expCustomType"/.test(html) && /id="recCustomType"/.test(html) && /function toggleCustomExpenseType\(/.test(html)],
   ['baking pan unit is available across unit selectors', (html.match(/<option>صاج<\/option>/g)||[]).length >= 5],
   ['live setup progress overview is present', /id="setupProgress"/.test(html) && /function renderSetupProgress\(/.test(html) && /renderSetupProgress\(\)/.test(html)],
   ['setup overview reads real catalog, recipe, stock and activity counts', /const total=db\.items\.length/.test(html) && /recipes=made\.filter/.test(html) && /stockCount=Object\.values\(db\.stock\)/.test(html) && /activity=\(db\.purchases/.test(html)],
@@ -44,5 +48,13 @@ let visibilityArgs=null;
 new Function('type','document',toggleMatch[0]+';toggleRecipeEditor(type);')('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
 assert.deepEqual(visibilityArgs,['hidden',false],'FAIL made product should show recipe editor');
 console.log('PASS recipe editor appears when product is marked made in-house');
+const allocationMatch=html.match(/function overheadShareForProduct\(amount,product,totals,method\)\{[\s\S]*?\n\}/);
+assert.ok(allocationMatch,'FAIL overhead allocation helper can be extracted');
+const allocationFn=new Function('amount','product','totals','method',allocationMatch[0].replace(/^function overheadShareForProduct\(amount,product,totals,method\)\{/,'return (function(amount,product,totals,method){').replace(/\n\}$/,'\n})(amount,product,totals,method);'));
+const fixedShare=allocationFn(1200,{revenue:500,cost:200,qty:10},{revenue:1000,cost:400,qty:20},'direct');
+assert.equal(fixedShare,600,'FAIL fixed overhead share should follow direct cost share');
+assert.equal(fixedShare/10,60,'FAIL fixed overhead per sold unit');
+console.log('PASS fixed overhead allocation: 1,200 monthly fixed cost, 50% direct-cost share, 60 EGP per sold unit');
+
 
 
