@@ -343,8 +343,8 @@ function saveSaleInvoice(){let rows=[...document.querySelectorAll('.sale-invoice
 function addExpense(){let amount=num('expAmount');if(amount<=0)return alert('اكتب مبلغ المصروف');let expenseId=id();db.expenses.unshift({id:expenseId,type:val('expType'),amount,note:val('expNote'),payMethod:val('expPayMethod'),date:new Date().toISOString()});if(val('expPayMethod')==='cash')cashMove('out',amount,'مصروف '+val('expType'),expenseId);clear(['expAmount','expNote']);save();alert('تم تسجيل المصروف')}
 
 
-function renderSmartAlerts(){const soon=new Date();soon.setDate(soon.getDate()+30);let exp=(db.expiryBatches||[]).filter(x=>x.expiryDate&&new Date(x.expiryDate+'T23:59:59')<=soon);if(exp.length)alertsExpiryNotice=exp.length;
- let alerts=[];
+function renderSmartAlerts(){
+ let alerts=[];const soon=new Date();soon.setDate(soon.getDate()+30);let exp=(db.expiryBatches||[]).filter(x=>x.expiryDate&&new Date(x.expiryDate+'T23:59:59')<=soon);if(exp.length)alerts.push('فيه '+exp.length+' دفعة مسجلة صلاحيتها خلال 30 يوم أو انتهت؛ راجعها في متابعة الصلاحية.');
  let low=Object.values(db.stock||{}).filter(x=>Number(x.lowStock)>0&&Number(x.qty)<=Number(x.lowStock));
  if(low.length)alerts.push('فيه '+low.length+' خامة أو صنف وصل لحد التنبيه ويحتاج مراجعة شراء.');
  let due={};(db.purchases||[]).forEach(p=>{let d=Math.max(0,Number(p.cost||0)-Number(p.paid||0));if(p.supplier&&d>0)due[p.supplier]=(due[p.supplier]||0)+d});
