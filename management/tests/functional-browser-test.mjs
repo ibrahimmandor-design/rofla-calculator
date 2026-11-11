@@ -87,6 +87,7 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.savePurchaseInvoice());
   let d = await state();
   check('purchase', d.stock['خامة:دقيق اختبار']?.qty === 2 && d.purchases.length === 1, '2 kg flour stock; invoice saved');
+  check('purchased materials appear in stock flow summary', (await page.locator('#stockFlowSummary').innerText()).includes('دقيق اختبار'), 'purchased raw material listed');
   check('purchase cash movement', d.cashMovements.filter(x => x.kind === 'out').reduce((n,x)=>n+x.amount,0) === 40, '40 EGP paid from drawer');
 
   // Verify that a ready-bought item can be switched to in-house production and back.
@@ -147,6 +148,7 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('production raw deduction', d.stock['خامة:دقيق اختبار']?.qty === 1.5, 'flour balance 1.5 kg');
   check('production finished stock', d.stock['منتج:بسبوسة اختبار']?.qty === 7, '7 saleable pieces');
+  check('produced goods appear in stock flow summary', (await page.locator('#stockFlowSummary').innerText()).includes('بسبوسة اختبار'), 'produced item listed');
   check('production leftovers and waste', d.stock['خامة:بواقي: بسبوسة اختبار']?.qty === 2 && d.productions[0].wasteCost === 1, '2 leftovers; waste cost 1 EGP');
 
   // Optional price recommendation uses recorded unit cost and entered margin.
