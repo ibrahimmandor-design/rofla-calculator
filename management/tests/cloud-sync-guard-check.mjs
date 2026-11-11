@@ -29,7 +29,7 @@ assert.ok(priceFnMatch,'FAIL suggested price function can be extracted');
 const priceHost={textContent:'',innerHTML:''};
 const priceDB={items:[{id:'item-1',name:'اختبار',type:'bought'}],stock:{'جاهز:اختبار':{costPer:10}}};
 const priceValues={priceItem:'item-1',targetMargin:'25'};
-new Function('db','val','document','money',priceFnMatch[0])(
+new Function('db','val','document','money',priceFnMatch[0]+';renderSuggestedPrice();')(
  priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج'
 );
 assert.match(priceHost.innerHTML,/سعر البيع المقترح:[\s\S]*13\.33/,'FAIL 25% margin calculation');
@@ -37,7 +37,7 @@ console.log('PASS suggested price calculation: cost 10, margin 25%, price 13.33'
 const toggleMatch=html.match(/function toggleRecipeEditor\(type\)\{[^}]+\}/);
 assert.ok(toggleMatch && /onchange="toggleRecipeEditor\(this.value\)"/.test(html),'FAIL recipe editor visibility handler');
 let visibilityArgs=null;
-new Function('type','document',toggleMatch[0])('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
+new Function('type','document',toggleMatch[0]+';toggleRecipeEditor(type);')('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
 assert.deepEqual(visibilityArgs,['hidden',false],'FAIL made product should show recipe editor');
 console.log('PASS recipe editor appears when product is marked made in-house');
 
