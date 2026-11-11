@@ -56,11 +56,15 @@ async function runScenario(name, contextOptions) {
   check('purchase', d.stock['خامة:دقيق اختبار']?.qty === 2 && d.purchases.length === 1, '2 kg flour stock; invoice saved');
   check('purchase cash movement', d.cashMovements.filter(x => x.kind === 'out').reduce((n,x)=>n+x.amount,0) === 40, '40 EGP paid from drawer');
 
-  // Verify that a starter catalogue item can be switched to in-house production and back.
+  // Verify that a ready-bought item can be switched to in-house production and back.
   await tab('items');
+  await fill('itemName', 'صنف جاهز للتصنيف');
+  await page.locator('#itemType').selectOption('bought');
+  await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
+  await page.evaluate(() => window.addItem());
   d = await state();
-  const starterItem = d.items.find(x => x.type === 'bought');
-  assert.ok(starterItem, 'starter catalogue item missing');
+  const starterItem = d.items.find(x => x.name === 'صنف جاهز للتصنيف');
+  assert.ok(starterItem, 'ready-bought test item missing');
   await page.locator('#editItemSelect').selectOption(starterItem.id);
   await page.locator('#editItemType').selectOption('made');
   check('recipe editor opens for made item', await page.locator('#editRecipeEditor').isVisible(), starterItem.name);
