@@ -98,7 +98,8 @@ async function runScenario(name, contextOptions) {
   await page.locator('#priceItem').selectOption(product.id);
   await fill('targetMargin', 25);
   const suggestedPrice = await page.locator('#priceSuggestion').innerText();
-  check('suggested selling price', suggestedPrice.includes('1.33'), suggestedPrice.replace(/\\s+/g,' ').slice(0,120));
+  const expectedSuggestedPrice = await page.evaluate(() => money(1 / (1 - 0.25)));
+  check('suggested selling price', suggestedPrice.includes(expectedSuggestedPrice), suggestedPrice.replace(/\\s+/g,' ').slice(0,120));
 
   // Reuse the leftovers as a recipe ingredient in a second product.
   await tab('items');
