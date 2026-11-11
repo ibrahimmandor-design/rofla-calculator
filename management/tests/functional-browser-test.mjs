@@ -71,7 +71,7 @@ async function runScenario(name, contextOptions) {
     raw: [...document.querySelectorAll('#roflaRawChoices option')].map(x=>x.value),
     ready: [...document.querySelectorAll('#roflaReadyChoices option')].map(x=>x.value)
   }));
-  check('choice-first ingredient catalog', ['دقيق','سمن بلدي','سميد','زبدة','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
+  check('choice-first ingredient catalog', ['دقيق','سمن','سمن بلدي','سميد','زبدة','سكر','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
   check('ready sweets catalog', ['بسبوسة سادة','جاتوه شوكولاتة','باتيه جبنة'].every(x=>choiceLists.ready.includes(x)), 'eastern, western and bakery products are selectable');
   await page.locator('#buyKind').selectOption('ready');
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
