@@ -12,13 +12,29 @@ async function runScenario(name, contextOptions) {
   page.on('console', message => { if(message.type()==='error') jsErrors.push('console: '+message.text()); });
   page.on('dialog', dialog => dialog.accept());
   await page.goto(process.env.ROFLA_BASE_URL || 'http://127.0.0.1:4173/management/', { waitUntil: 'domcontentloaded' });
-  await page.evaluate(() => { localStorage.clear(); });
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('rofla_mvp_v1', JSON.stringify({items:[],stock:{},sales:[{id:'PRIVATE_TEST_SENTINEL',name:'اختبار خصوصية',qty:1,price:1}]}));
+  });
   await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => typeof window.showTab === 'function' && localStorage.getItem('rofla_mvp_v1') === null, { timeout: 10000 });
 
   const check = (label, condition, detail = '') => {
     assert.ok(condition, name + ': ' + label + (detail ? ' — ' + detail : ''));
     results.push('PASS ' + name + ' ' + label + (detail ? ' — ' + detail : ''));
   };
+  const access = await page.evaluate(() => ({
+    tabsHidden: document.querySelector('.tabs').classList.contains('hidden'),
+    panelsHidden: [...document.querySelectorAll('.panel')].every(p => p.classList.contains('hidden')),
+    localDataCleared: localStorage.getItem('rofla_mvp_v1') === null,
+    memoryCleared: db.sales.length === 0
+  }));
+  check('signed-out privacy gate', access.tabsHidden && access.panelsHidden && access.localDataCleared && access.memoryCleared, JSON.stringify(access));
+  await page.evaluate(() => {
+    document.getElementById('authGate').classList.add('hidden');
+    document.querySelector('.tabs').classList.remove('hidden');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('hidden'));
+  });
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
   const tab = async (id) => page.evaluate(id => window.showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
