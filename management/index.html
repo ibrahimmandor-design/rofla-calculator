@@ -81,7 +81,7 @@ const SUPABASE_URL='https://tpcwyacybpwonsyuegjw.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_SSidbj0latH37a5vQHUsuQ_JU5OWiFi';
 const ROFLA_EMAIL='ibrahimmandor@icloud.com';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let cloudRevision=0,cloudReady=false,cloudBusy=false,cloudQueue=Promise.resolve(),suppressCloud=false,activeCloudUserId=null,cloudLoadPromise=null;
+let cloudRevision=0,cloudReady=false,cloudBusy=false,cloudQueue=Promise.resolve(),cloudWritesPending=0,cloudRefreshBusy=false,cloudSaveFailed=false,suppressCloud=false,activeCloudUserId=null,cloudLoadPromise=null;
 function setAuthMessage(s){const e=document.getElementById('authMessage');if(e)e.textContent=s}
 function setSyncMessage(s){const e=document.getElementById('syncMessage');if(e)e.textContent=s}
 function showAuthState(session){
@@ -112,20 +112,51 @@ async function loadCloudData(){
  cloudReady=true;lastSavedSnapshot=JSON.stringify(db);setSyncMessage('متصل بالسحابة — آخر إصدار '+cloudRevision);
 }
 function persistCloudData(){
+ cloudWritesPending++;
  cloudQueue=cloudQueue.then(async()=>{
   if(!cloudReady||suppressCloud)return false;
   const snapshot=JSON.parse(JSON.stringify(db));
   const {data,error}=await supabaseClient.rpc('save_rofla_data',{p_data:snapshot,p_expected_revision:cloudRevision});
   if(error){
+   cloudSaveFailed=true;
    if(String(error.message||'').includes('ROFLA_CONFLICT')){
     cloudReady=false;setSyncMessage('فيه تعديل أحدث من جهاز آخر. أوقفنا الحفظ مؤقتًا لحماية البيانات؛ حدّث البيانات من السحابة قبل المتابعة.');
     return false;
    }
    setSyncMessage('تعذر الحفظ السحابي: '+error.message);return false;
   }
-  cloudRevision=Number(data);setSyncMessage('تم حفظ التغييرات سحابيًا — الإصدار '+cloudRevision);return true;
- }).catch(e=>{setSyncMessage('خطأ في المزامنة: '+e.message);return false;});
+  cloudRevision=Number(data);cloudSaveFailed=false;setSyncMessage('تم حفظ التغييرات سحابيًا — الإصدار '+cloudRevision);return true;
+ }).catch(e=>{cloudSaveFailed=true;setSyncMessage('خطأ في المزامنة: '+e.message);return false;}).finally(()=>{cloudWritesPending=Math.max(0,cloudWritesPending-1)});
  return cloudQueue;
+}
+async function refreshCloudIfSafe(force=false){
+ if(cloudRefreshBusy||cloudWritesPending>0||cloudLoadPromise)return false;
+ if(!cloudReady&&!force)return false;
+ if(force&&(!cloudReady||cloudSaveFailed)){
+  if(!confirm('فيه تغييرات محلية قد لا تكون محفوظة في السحابة. تحديث البيانات سيستبدل النسخة الحالية بآخر نسخة سحابية. هل تريد المتابعة؟'))return false;
+ }
+ cloudRefreshBusy=true;
+ try{
+  const {data,error}=await supabaseClient.from('rofla_store').select('data,revision').eq('id',1).single();
+  if(error)throw error;
+  if(cloudWritesPending>0)return false;
+  const remoteRevision=Number(data.revision)||0;
+  if(!force&&remoteRevision===cloudRevision)return true;
+  if(!force&&(cloudSaveFailed||JSON.stringify(db)!==lastSavedSnapshot))return false;
+  suppressCloud=true;
+  try{
+   db=normalizeDB(data.data||{});
+   ensureStarterCatalog();
+   localStorage.setItem(KEY,JSON.stringify(db));
+   lastSavedSnapshot=JSON.stringify(db);
+   cloudRevision=remoteRevision;
+   cloudSaveFailed=false;
+  }finally{suppressCloud=false;}
+  cloudReady=true;renderAll();
+  setSyncMessage((force?'تم تحديث البيانات من السحابة':'تم تحديث البيانات تلقائيًا من جهاز آخر')+' — الإصدار '+cloudRevision);
+  return true;
+ }catch(e){setSyncMessage('تعذر تحديث البيانات من السحابة: '+e.message);return false;}
+ finally{cloudRefreshBusy=false;}
 }
 function clearLocalSessionData(){cloudReady=false;activeCloudUserId=null;cloudLoadPromise=null;db=emptyDB();localStorage.removeItem(KEY);lastSavedSnapshot=JSON.stringify(db)}
 async function handleCloudSession(session){
@@ -172,7 +203,7 @@ document.getElementById('updateSignedInPassword').addEventListener('click',async
  if(!error){document.getElementById('signedInNewPassword').value='';document.getElementById('signedInConfirmPassword').value='';}
 });
 document.getElementById('signOut').addEventListener('click',async()=>{try{await cloudQueue}catch(e){}await supabaseClient.auth.signOut();clearLocalSessionData();showAuthState(null);setSyncMessage('تم تسجيل الخروج ومسح نسخة البيانات المحلية من هذا الجهاز.');});
-document.getElementById('syncNow').addEventListener('click',async()=>{cloudReady=false;setSyncMessage('جاري تحديث البيانات...');try{await loadCloudData()}catch(e){setSyncMessage('تعذر التحديث: '+e.message)}});
+document.getElementById('syncNow').addEventListener('click',async()=>{setSyncMessage('جاري تحديث البيانات...');await refreshCloudIfSafe(true)});
 let passwordRecoveryMode=false;
 document.getElementById('forgotPassword').addEventListener('click',async()=>{
  setAuthMessage('جاري إرسال رابط استعادة كلمة المرور إلى بريدك...');
@@ -209,6 +240,9 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{
  if(!passwordRecoveryMode)setTimeout(()=>handleCloudSession(session),0);
 });
 supabaseClient.auth.getSession().then(({data})=>handleCloudSession(data.session));
+window.setInterval(()=>{if(document.visibilityState==='visible')refreshCloudIfSafe(false)},30000);
+window.addEventListener('focus',()=>refreshCloudIfSafe(false));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshCloudIfSafe(false)});
 
 const DB_ARRAYS=['items','purchases','supplierPayments','cashMovements','cashCounts','productions','sales','returns','expenses','market','movements','supplierPrices','expiryBatches','customers','customerPayments','dailyClosings','auditLog'];
 const emptyDB=()=>({items:[],stock:{},purchases:[],supplierPayments:[],cashMovements:[],cashCounts:[],cashOpening:0,cashOpeningSet:false,productions:[],sales:[],returns:[],expenses:[],market:[],movements:[],supplierPrices:[],expiryBatches:[],customers:[],customerPayments:[],dailyClosings:[],auditLog:[]});
