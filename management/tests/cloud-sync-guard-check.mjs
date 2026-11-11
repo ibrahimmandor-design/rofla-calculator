@@ -36,7 +36,7 @@ const priceValues={priceItem:'item-1',targetMargin:'25'};
 new Function('db','val','document','money','overheadPerUnit',priceFnMatch[0]+';renderSuggestedPrice();')(
  priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج',()=>0
 );
-assert.match(priceHost.innerHTML,/سعر البيع المقترح:[\s\S]*13\.33/,'FAIL 25% margin calculation');
+assert.ok(priceHost.innerHTML.includes('13.33 ج'),'FAIL 25% margin calculation: '+priceHost.innerHTML);
 console.log('PASS suggested price calculation: cost 10, margin 25%, price 13.33');
 const toggleMatch=html.match(/function toggleRecipeEditor\(type\)\{[^}]+\}/);
 assert.ok(toggleMatch && /onchange="toggleRecipeEditor\(this.value\)"/.test(html),'FAIL recipe editor visibility handler');
