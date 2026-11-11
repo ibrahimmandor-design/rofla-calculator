@@ -33,7 +33,7 @@ assert.ok(priceFnMatch,'FAIL suggested price function can be extracted');
 const priceHost={textContent:'',innerHTML:''};
 const priceDB={items:[{id:'item-1',name:'اختبار',type:'bought'}],stock:{'جاهز:اختبار':{costPer:10}}};
 const priceValues={priceItem:'item-1',targetMargin:'25'};
-new Function('db','val','document','money',priceFnMatch[0]+';renderSuggestedPrice();')(
+new Function('db','val','document','money','overheadPerUnit',priceFnMatch[0]+';renderSuggestedPrice();')(
  priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج'
 );
 assert.match(priceHost.innerHTML,/سعر البيع المقترح:[\s\S]*13\.33/,'FAIL 25% margin calculation');
