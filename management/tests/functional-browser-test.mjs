@@ -56,8 +56,27 @@ async function runScenario(name, contextOptions) {
   check('purchase', d.stock['خامة:دقيق اختبار']?.qty === 2 && d.purchases.length === 1, '2 kg flour stock; invoice saved');
   check('purchase cash movement', d.cashMovements.filter(x => x.kind === 'out').reduce((n,x)=>n+x.amount,0) === 40, '40 EGP paid from drawer');
 
-  // Create product and recipe through the actual item form.
+  // Verify that a starter catalogue item can be switched to in-house production and back.
   await tab('items');
+  d = await state();
+  const starterItem = d.items.find(x => x.type === 'bought');
+  assert.ok(starterItem, 'starter catalogue item missing');
+  await page.locator('#editItemSelect').selectOption(starterItem.id);
+  await page.locator('#editItemType').selectOption('made');
+  check('recipe editor opens for made item', await page.locator('#editRecipeEditor').isVisible(), starterItem.name);
+  await page.evaluate(() => window.addEditRecipeRow());
+  await page.locator('.edit-recipe-row .ern').last().fill('دقيق اختبار');
+  await page.locator('.edit-recipe-row .erq').last().fill('0.1');
+  await page.locator('.edit-recipe-row .eru').last().selectOption({ label: 'كيلو' });
+  await page.evaluate(() => window.saveItemEdits());
+  d = await state();
+  check('starter item switched to made', d.items.find(x => x.id === starterItem.id)?.type === 'made' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 1, starterItem.name);
+  await page.locator('#editItemType').selectOption('bought');
+  await page.evaluate(() => window.saveItemEdits());
+  d = await state();
+  check('starter item can return to bought', d.items.find(x => x.id === starterItem.id)?.type === 'bought' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 0, starterItem.name);
+
+  // Create product and recipe through the actual item form.
   await fill('itemName', 'بسبوسة اختبار');
   await page.locator('#itemType').selectOption('made');
   await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
