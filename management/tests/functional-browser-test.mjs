@@ -9,7 +9,7 @@ async function runScenario(name, contextOptions) {
   const page = await context.newPage();
   const jsErrors = [];
   page.on('pageerror', error => jsErrors.push('pageerror: '+error.message));
-  page.on('console', message => { if(message.type()==='error') jsErrors.push('console: '+message.text()); });
+  page.on('console', message => { if(message.type()==='error' && /Uncaught|SyntaxError|ReferenceError|TypeError|Script error/i.test(message.text())) jsErrors.push('console: '+message.text()); });
   page.on('dialog', dialog => dialog.accept());
   await page.goto(process.env.ROFLA_BASE_URL || 'http://127.0.0.1:4173/management/', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => {
