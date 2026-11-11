@@ -167,6 +167,28 @@ async function runScenario(name, contextOptions) {
   check('report net profit', report.net === expectedMoney.net, report.net);
   check('data audit', report.audit.includes('لم يظهر خطأ واضح'), report.audit.slice(0,120));
 
+  // New home dashboard summary must reconcile with the same known transaction scenario.
+  await tab('home');
+  await page.evaluate(() => {
+    document.getElementById('dashboardPeriod').value = 'all';
+    window.renderDashboardSummary();
+  });
+  const dashboard = await page.evaluate(() => ({
+    sales: document.getElementById('mSales').textContent,
+    buys: document.getElementById('mBuys').textContent,
+    cogs: document.getElementById('mCogs').textContent,
+    gross: document.getElementById('mGross').textContent,
+    expenses: document.getElementById('mExpenses').textContent,
+    profit: document.getElementById('mProfit').textContent
+  }));
+  const dashboardExpected = await page.evaluate(() => ({
+    sales: money(10), buys: money(40), cogs: money(2),
+    gross: money(8), expenses: money(2), profit: money(5)
+  }));
+  for (const key of Object.keys(dashboardExpected)) {
+    check('home dashboard ' + key, dashboard[key] === dashboardExpected[key], dashboard[key]);
+  }
+
   // Customer credit, collection, daily close and audit trail.
   await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
