@@ -27,6 +27,16 @@ jobs:
           npm init -y
           npm install --no-save playwright
           npx playwright install --with-deps chromium
+      - name: Check inline JavaScript syntax
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const html = readFileSync('management/index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
+          if (!scripts.length) throw new Error('Inline application script not found');
+          writeFileSync('/tmp/rofla-inline.js', scripts.at(-1)[1]);
+          EOF
+          node --check /tmp/rofla-inline.js
       - name: Verify live production app on desktop and iPhone
         env:
           ROFLA_BASE_URL: https://ibrahimmandor-design.github.io/rofla-calculator/management/
