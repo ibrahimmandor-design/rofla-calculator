@@ -78,17 +78,27 @@ async function runScenario(name, contextOptions) {
   await tab('buy');
   const choiceLists = await page.evaluate(() => ({
     raw: [...document.querySelectorAll('#roflaRawChoices option')].map(x=>x.value),
-    ready: [...document.querySelectorAll('#roflaReadyChoices option')].map(x=>x.value)
+    ready: [...document.querySelectorAll('#roflaReadyChoices option')].map(x=>x.value),
+    supplies: [...document.querySelectorAll('#roflaSupplyChoices option')].map(x=>x.value)
   }));
   check('choice-first ingredient catalog', ['دقيق','سمن','سمن بلدي','سميد ناعم','زبدة','سكر','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
   check('ready sweets catalog', ['بسبوسة سادة','جاتوه شوكولاتة','باتيه جبنة'].every(x=>choiceLists.ready.includes(x)), 'eastern, western and bakery products are selectable');
+  check('operating supplies are separated from food ingredients',
+    ['أكياس','علب كرتون','قفازات','منظفات'].every(x=>choiceLists.supplies.includes(x)) && !choiceLists.raw.includes('أكياس'),
+    'packaging and cleaning supplies have their own list');
   await page.locator('#buyKind').selectOption('ready');
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
+  await page.locator('#buyKind').selectOption('supplies');
+  check('quick purchase has a separate operating supplies list', await page.locator('#buyName').getAttribute('list') === 'roflaSupplyChoices', 'operating supplies list');
   await page.locator('#buyKind').selectOption('raw');
   check('custom typed item remains supported', await page.locator('#buyName').getAttribute('list') === 'roflaRawChoices', 'free text with raw material suggestions');
   check('supplier field offers suggestions and accepts typed names',
     await page.locator('#buySupplier').getAttribute('list') === 'roflaSupplierChoices',
     'supplier choices plus free text');
+  await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('supplies');
+  check('purchase invoice switches to operating supplies list',
+    await page.locator('.purchase-invoice-row').last().locator('.pi-name').getAttribute('list') === 'roflaSupplyChoices',
+    'invoice row uses supply list');
   await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
   await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
   await page.locator('.purchase-invoice-row').last().locator('.pi-qty').fill('2');
@@ -388,6 +398,28 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('daily close', d.dailyClosings.length === 1 && d.dailyClosings[0].difference === 0, JSON.stringify({dailyClosings:d.dailyClosings,cashAfterCustomer}));
   check('audit log', d.auditLog.length >= 5, d.auditLog.length + ' change records');
+  await tab('buy');
+  await page.locator('#buyKind').selectOption('supplies');
+  await fill('buyName', 'أكياس اختبار');
+  await fill('buyQty', 10);
+  await page.locator('#buyUnit').selectOption({ label: 'قطعة' });
+  await fill('buyCost', 20);
+  await fill('buySupplier', 'مورد تغليف');
+  await page.locator('#buyPayMethod').selectOption('bank');
+  await fill('buyPaid', 20);
+  await fill('buyLow', 12);
+  await page.evaluate(() => window.addPurchase());
+  d = await state();
+  check('operating supplies purchase updates separate stock balance',
+    d.stock['مستلزم:أكياس اختبار']?.qty === 10 && d.stock['مستلزم:أكياس اختبار']?.kind === 'supplies',
+    '10 packaging units recorded as operating supplies');
+  const supplyFlow = await page.locator('#stockFlowSummary').innerText();
+  check('operating supplies ledger shows supplier and purchase value',
+    supplyFlow.includes('أكياس اختبار') && supplyFlow.includes('مورد تغليف') && supplyFlow.includes('مستلزم تشغيل'),
+    'supply purchase traceable by supplier');
+  check('operating supplies low-stock alert',
+    (await page.locator('#shoppingSuggestions').innerText()).includes('أكياس اختبار'),
+    'reorder alert for operating supplies');
 
   // Verify that changes are written locally while the test session is active,
   // then verify that an unauthenticated reload clears the local copy.
