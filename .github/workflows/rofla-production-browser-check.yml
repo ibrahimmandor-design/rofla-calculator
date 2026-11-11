@@ -38,6 +38,19 @@ jobs:
           writeFileSync('/tmp/rofla-inline.js', html.slice(start + 8, end));
           EOF
           node --check /tmp/rofla-inline.js
+      - name: Wait until this commit is live on GitHub Pages
+        run: |
+          url="https://ibrahimmandor-design.github.io/rofla-calculator/management/"
+          for attempt in $(seq 1 36); do
+            if curl -fsSL "$url" | grep -q 'ROFLA_BUILD_20261111_CREDIT_CLOSE_V3'; then
+              echo "The expected build is live."
+              exit 0
+            fi
+            echo "Waiting for GitHub Pages deployment ($attempt/36)..."
+            sleep 10
+          done
+          echo "Timed out waiting for the expected production build."
+          exit 1
       - name: Verify live production app on desktop and iPhone
         env:
           ROFLA_BASE_URL: https://ibrahimmandor-design.github.io/rofla-calculator/management/
