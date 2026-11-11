@@ -70,6 +70,14 @@ async function runScenario(name, contextOptions) {
   const product = d.items.find(x => x.name === 'بسبوسة اختبار');
   check('item and recipe', !!product && product.recipe.length === 1, 'product and recipe stored');
 
+  // Edit the saved recipe through the product editor without changing its values.
+  await page.locator('#editItemSelect').selectOption(product.id);
+  check('product editor loads recipe', await page.locator('.edit-recipe-row').count() === 1, 'existing recipe is editable');
+  await page.locator('.edit-recipe-row .erq').fill('0.5');
+  await page.evaluate(() => window.saveItemEdits());
+  d = await state();
+  check('product recipe edit saved', d.items.find(x => x.id === product.id)?.recipe[0]?.qty === 0.5, 'recipe remains 0.5 kg');
+
   // Produce 10: 7 saleable, 2 reusable leftovers, 1 waste.
   await tab('make');
   await page.locator('#makeItem').selectOption(product.id);
@@ -84,6 +92,13 @@ async function runScenario(name, contextOptions) {
   check('production raw deduction', d.stock['خامة:دقيق اختبار']?.qty === 1.5, 'flour balance 1.5 kg');
   check('production finished stock', d.stock['منتج:بسبوسة اختبار']?.qty === 7, '7 saleable pieces');
   check('production leftovers and waste', d.stock['خامة:بواقي: بسبوسة اختبار']?.qty === 2 && d.productions[0].wasteCost === 1, '2 leftovers; waste cost 1 EGP');
+
+  // Optional price recommendation uses recorded unit cost and entered margin.
+  await tab('items');
+  await page.locator('#priceItem').selectOption(product.id);
+  await fill('targetMargin', 25);
+  const suggestedPrice = await page.locator('#priceSuggestion').innerText();
+  check('suggested selling price', suggestedPrice.includes('1.33'), suggestedPrice.replace(/\\s+/g,' ').slice(0,120));
 
   // Reuse the leftovers as a recipe ingredient in a second product.
   await tab('items');
