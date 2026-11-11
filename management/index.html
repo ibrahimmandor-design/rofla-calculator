@@ -49,7 +49,7 @@
 <button class="tab admin-tab" data-tab="expense">مصروفات</button><button class="tab admin-tab" data-tab="cash">درج النقدية</button><button class="tab admin-tab" data-tab="stock">المخزون والجرد</button><button class="tab admin-tab" data-tab="items">الأصناف والوصفات</button><button class="tab admin-tab" data-tab="market">الموردون والأسعار</button><button class="tab admin-tab" data-tab="reports">التقارير والمكسب</button>
 <button type="button" class="mode-toggle" id="adminModeToggle" onclick="toggleAdminMode()">⚙️ فتح أدوات الإدارة</button>
 </nav>
-<p class="muted" id="modeHint" style="display:none">وضع التشغيل: تظهر المهام اليومية فقط. أدوات الإدارة متاحة من زر الإدارة. تغيير العرض لا يغيّر صلاحيات الحساب أو بياناته.</p>
+<p class="muted" id="modeHint" style="display:none">أنت الآن في أدوات الإدارة. للعودة للمهام اليومية اضغط زر الرجوع. تغيير العرض لا يغيّر صلاحيات الحساب أو بياناته.</p>
 <section id="home" class="panel active hidden">
 <div class="card" style="margin-bottom:10px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><small class="muted">أنت هنا</small><h2 style="margin:3px 0">الرئيسية · ملخص المحل</h2></div><div class="field" style="min-width:130px;margin:0"><label for="dashboardPeriod">الفترة</label><select id="dashboardPeriod" onchange="renderDashboardSummary()"><option value="today">اليوم</option><option value="month">الشهر</option><option value="all">كل الفترة</option></select></div></div></div>
 <div class="metrics">
