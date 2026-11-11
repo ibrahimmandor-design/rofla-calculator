@@ -99,9 +99,9 @@ async function loadCloudData(){
    cloudReady=true;
    await persistCloudData();
  }else{
-   suppressCloud=true;db=normalizeDB(remote);ensureStarterCatalog();localStorage.setItem(KEY,JSON.stringify(db));suppressCloud=false;renderAll();
+   suppressCloud=true;db=normalizeDB(remote);ensureStarterCatalog();localStorage.setItem(KEY,JSON.stringify(db));lastSavedSnapshot=JSON.stringify(db);suppressCloud=false;renderAll();
  }
- cloudReady=true;setSyncMessage('متصل بالسحابة — آخر إصدار '+cloudRevision);
+ cloudReady=true;lastSavedSnapshot=JSON.stringify(db);setSyncMessage('متصل بالسحابة — آخر إصدار '+cloudRevision);
 }
 function persistCloudData(){
  cloudQueue=cloudQueue.then(async()=>{
@@ -119,10 +119,12 @@ function persistCloudData(){
  }).catch(e=>setSyncMessage('خطأ في المزامنة: '+e.message));
  return cloudQueue;
 }
+function clearLocalSessionData(){cloudReady=false;db=emptyDB();localStorage.removeItem(KEY);lastSavedSnapshot=JSON.stringify(db)}
 async function handleCloudSession(session){
  if(session&&session.user&&String(session.user.email||'').toLowerCase()!==ROFLA_EMAIL){
-  await supabaseClient.auth.signOut();showAuthState(null);setAuthMessage('هذا البريد غير مصرح له باستخدام بيانات ROFLA.');return;
+  await supabaseClient.auth.signOut();clearLocalSessionData();showAuthState(null);setAuthMessage('هذا البريد غير مصرح له باستخدام بيانات ROFLA.');return;
  }
+ if(!session){clearLocalSessionData();showAuthState(null);return;}
  showAuthState(session);
  if(session){
   cloudReady=false;setSyncMessage('جاري تحميل بيانات المحل...');
@@ -153,7 +155,7 @@ document.getElementById('updateSignedInPassword').addEventListener('click',async
  m.textContent=error?'تعذر تحديث كلمة المرور: '+error.message:'تم تغيير كلمة المرور بنجاح. استخدمها في تسجيل الدخول القادم.';
  if(!error){document.getElementById('signedInNewPassword').value='';document.getElementById('signedInConfirmPassword').value='';}
 });
-document.getElementById('signOut').addEventListener('click',async()=>{cloudReady=false;await supabaseClient.auth.signOut();showAuthState(null);});
+document.getElementById('signOut').addEventListener('click',async()=>{try{await cloudQueue}catch(e){}await supabaseClient.auth.signOut();clearLocalSessionData();showAuthState(null);setSyncMessage('تم تسجيل الخروج ومسح نسخة البيانات المحلية من هذا الجهاز.');});
 document.getElementById('syncNow').addEventListener('click',async()=>{cloudReady=false;setSyncMessage('جاري تحديث البيانات...');try{await loadCloudData()}catch(e){setSyncMessage('تعذر التحديث: '+e.message)}});
 let passwordRecoveryMode=false;
 document.getElementById('forgotPassword').addEventListener('click',async()=>{
