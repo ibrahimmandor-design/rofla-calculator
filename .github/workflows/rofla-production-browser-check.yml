@@ -26,7 +26,7 @@ jobs:
         run: |
           npm init -y
           npm install --no-save playwright
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Check inline JavaScript syntax
         run: |
           node --input-type=module <<'EOF'
