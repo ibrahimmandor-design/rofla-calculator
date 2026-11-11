@@ -305,6 +305,22 @@ async function runScenario(name, contextOptions) {
     fixedAllocation.table.includes('المصاريف الثابتة للوحدة') &&
     fixedAllocation.note.includes(fixedAllocation.fixedTotal),
     fixedAllocation.note);
+  await page.evaluate(() => {
+    document.getElementById('reportMode').value='day';
+    document.getElementById('reportDate').value=new Date().toISOString().slice(0,10);
+    window.renderReports();
+  });
+  const dailyFixed = await page.evaluate(() => ({
+    expenses: document.getElementById('rExpenses').textContent,
+    expected: money(1200 / new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate() + 2)
+  }));
+  check('daily product profit includes one day of rent salary and utilities',
+    dailyFixed.expenses === dailyFixed.expected,
+    dailyFixed.expenses + ' expected ' + dailyFixed.expected);
+  await page.evaluate(() => {
+    document.getElementById('reportMode').value='month';
+    window.renderReports();
+  });
   await page.locator('#recType').selectOption({ label: 'أخرى' });
   await fill('recCustomType', 'صيانة مخصصة');
   await fill('recAmount', 50);
