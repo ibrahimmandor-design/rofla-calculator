@@ -13,7 +13,7 @@ const checks = [
   ['operating supplies are a separate purchase and stock type', /ROFLA_OPERATING_SUPPLIES=\[/.test(html) && /value="supplies">مستلزمات تشغيل/.test(html) && /مستلزم:/.test(html) && /roflaSupplyChoices/.test(html)],
   ['raw ingredients exclude packaging and cleaning supplies', /filter\(x=>!supplySet\.has\(x\)\)/.test(html) && /supplyItems=\[\.\.\.new Set/.test(html)],
   ['supplier names and average purchase unit price are shown in the lifecycle ledger', /supplierNames=\[\.\.\.new Set\(purchases\.map/.test(html) && /متوسط تكلفة الشراء للوحدة/.test(html) && /supplierNames\.join/.test(html)],
-  ['lifecycle ledger includes the full catalog and suggested raw materials from zero balance', /productKeys=\(db\.items\|\|\[\]\)\.map/.test(html) && /rawNames=\[\.\.\.new Set/.test(html) && /كل كتالوج الأصناف والخامات المقترحة ظاهر/.test(html)],
+  ['lifecycle ledger includes the full catalog and suggested raw materials from zero balance', /productKeys=\(db\.items\|\|\[\]\)\.map/.test(html) && /rawNames=\[\.\.\.new Set/.test(html) && /كل كتالوج الأصناف والخامات ومستلزمات التشغيل ظاهر/.test(html)],
   ['complete purchase-to-sale traceability columns are present', /قيمة المشتريات/.test(html) && /المرتجعات/.test(html) && /صافي المباع/.test(html) && /قيمة المخزون المتبقي/.test(html) && /function renderFlowSummary\(/.test(html)],
   ['supplier and customer inputs support saved choices and free typing', /buySupplier[\s\S]{0,180}اسم المورد/.test(html) && /roflaSupplierChoices/.test(html) && /roflaCustomerChoices/.test(html) && /setAttribute\('list','roflaSupplierChoices'\)/.test(html)],
   ['fixed costs are automatically prorated in daily reports', /function getPeriodFixedRows\(mode,selected\)/.test(html) && /prorated:true/.test(html)],
