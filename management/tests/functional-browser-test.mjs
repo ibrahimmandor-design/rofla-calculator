@@ -209,7 +209,8 @@ async function runScenario(name, contextOptions) {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => localStorage.getItem('rofla_mvp_v1') === null);
   d = await state();
-  check('signed-out reload cleanup', d.sales.length === 0 && localStorage.getItem('rofla_mvp_v1') === null, 'private local data cleared without owner session');
+  const clearedAfterReload = await page.evaluate(() => localStorage.getItem('rofla_mvp_v1') === null);
+  check('signed-out reload cleanup', d.sales.length === 0 && clearedAfterReload, 'private local data cleared without owner session');
   check('browser JavaScript errors', jsErrors.length === 0, jsErrors.join(' | ') || '0 errors');
   await context.close();
 }
