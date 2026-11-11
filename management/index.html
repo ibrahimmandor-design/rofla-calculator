@@ -286,7 +286,6 @@ function setupChoiceLists(){
 }
 function setBuyChoiceList(){const e=document.getElementById('buyName');if(e)e.setAttribute('list',val('buyKind')==='ready'?'roflaReadyChoices':'roflaRawChoices')}
 function setPurchaseRowChoiceList(select){const row=select.closest('.purchase-invoice-row'),input=row?.querySelector('.pi-name');if(input)input.setAttribute('list',select.value==='ready'?'roflaReadyChoices':'roflaRawChoices');}
-}
 
 ensureStarterCatalog();
 function exportBackup(){try{const payload={app:'ROFLA',formatVersion:1,exportedAt:new Date().toISOString(),data:db};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rofla-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);document.getElementById('backupStatus').textContent='تم تجهيز النسخة الاحتياطية للتنزيل.'}catch(e){alert('حصلت مشكلة أثناء تجهيز النسخة الاحتياطية')}}
