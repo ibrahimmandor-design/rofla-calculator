@@ -64,7 +64,7 @@ async function runScenario(name, contextOptions) {
 
   // Cash opening balance and a real multi-line-capable purchase invoice form.
   await tab('cash');
-  await fill('cashOpeningInput', 40);
+  await fill('cashOpeningInput', 1240);
   await page.evaluate(() => window.setCashOpening());
   await tab('buy');
   const choiceLists = await page.evaluate(() => ({
@@ -218,7 +218,7 @@ async function runScenario(name, contextOptions) {
 
   // Cash drawer and monthly report must reconcile to the known scenario.
   const cash = await page.evaluate(() => window.cashExpected());
-  check('cash drawer', Math.abs(cash - 8) < 0.0001, 'expected cash 8 EGP');
+  check('cash drawer', Math.abs(cash - 1208) < 0.0001, 'expected cash 1,208 EGP');
   await tab('reports');
   await page.evaluate(() => {
     document.getElementById('reportMode').value = 'month';
