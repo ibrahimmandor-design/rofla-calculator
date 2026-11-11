@@ -185,6 +185,7 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('customer payment', d.sales.filter(x => x.customerName === 'عميل اختبار').reduce((n,x)=>n+x.dueAmount,0) === 0 && d.customerPayments.length === 1, 'customer balance cleared');
   const cashAfterCustomer = await page.evaluate(() => window.cashExpected());
+  await tab('cash');
   await fill('closeCashActual', cashAfterCustomer);
   await page.evaluate(() => window.closeBusinessDay());
   d = await state();
