@@ -84,8 +84,8 @@ async function runScenario(name, contextOptions) {
   check('choice-first ingredient catalog', ['دقيق','سمن','سمن بلدي','سميد ناعم','زبدة','سكر','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
   check('ready sweets catalog', ['بسبوسة سادة','جاتوه شوكولاتة','باتيه جبنة'].every(x=>choiceLists.ready.includes(x)), 'eastern, western and bakery products are selectable');
   check('operating supplies are separated from food ingredients',
-    ['أكياس','علب كرتون','قفازات','منظفات'].every(x=>choiceLists.supplies.includes(x)) && !choiceLists.raw.includes('أكياس'),
-    'packaging and cleaning supplies have their own list');
+    ['غاز تشغيل','قفازات','منظفات','مطهرات'].every(x=>choiceLists.supplies.includes(x)) && choiceLists.raw.includes('أكياس'),
+    'packaging stays available for recipe costing; cleaning and safety supplies are separate');
   await page.locator('#buyKind').selectOption('ready');
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
   await page.locator('#buyKind').selectOption('supplies');
