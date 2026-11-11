@@ -9,10 +9,11 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V29/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V30/.test(html)],
   ['lifecycle ledger includes the full catalog and suggested raw materials from zero balance', /productKeys=\(db\.items\|\|\[\]\)\.map/.test(html) && /rawNames=\[\.\.\.new Set/.test(html) && /كل كتالوج الأصناف والخامات المقترحة ظاهر/.test(html)],
   ['complete purchase-to-sale traceability columns are present', /قيمة المشتريات/.test(html) && /المرتجعات/.test(html) && /صافي المباع/.test(html) && /قيمة المخزون المتبقي/.test(html) && /function renderFlowSummary\(/.test(html)],
   ['supplier and customer inputs support saved choices and free typing', /buySupplier[\s\S]{0,180}اسم المورد/.test(html) && /roflaSupplierChoices/.test(html) && /roflaCustomerChoices/.test(html) && /setAttribute\('list','roflaSupplierChoices'\)/.test(html)],
+  ['fixed costs are automatically prorated in daily reports', /function getPeriodFixedRows\(mode,selected\)/.test(html) && /prorated:true/.test(html)],
   ['fixed overhead is separated and allocated to each sold unit', /function getPeriodOverheadSplit\(/.test(html) && /function overheadShareForProduct\(/.test(html) && /المصاريف الثابتة للوحدة/.test(html) && /نصيبه من المصاريف الثابتة/.test(html)],
   ['custom product category is writable', /id="itemCategoryOther"/.test(html) && /toggleCustomChoice\('itemCategory','itemCategoryOther'\)/.test(html)],
   ['custom sales channels are writable in quick and invoice sales', /id="sellChannelOther"/.test(html) && /id="invoiceChannelOther"/.test(html) && /channel=val\('sellChannel'\)==='أخرى'/.test(html) && /channel=val\('invoiceChannel'\)==='أخرى'/.test(html)],
@@ -51,6 +52,19 @@ let visibilityArgs=null;
 new Function('type','document',toggleMatch[0]+';toggleRecipeEditor(type);')('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
 assert.deepEqual(visibilityArgs,['hidden',false],'FAIL made product should show recipe editor');
 console.log('PASS recipe editor appears when product is marked made in-house');
+
+const fixedRowsMatch=html.match(/function getPeriodFixedRows\(mode,selected\)\{[\s\S]*?\n\}/);
+assert.ok(fixedRowsMatch,'FAIL fixed expense period rows can be extracted');
+const fixedRowsFn=new Function('db','mode','selected',fixedRowsMatch[0]+';return getPeriodFixedRows(mode,selected);');
+const recurringFixture={recurringExpenses:[{id:'rent',type:'إيجار',amount:1200,startMonth:'2026-11',active:true}],expenseAccruals:[]};
+const monthRows=fixedRowsFn(recurringFixture,'month','2026-11');
+const dayRows=fixedRowsFn(recurringFixture,'day','2026-11-15');
+assert.equal(monthRows.length,1,'FAIL monthly fixed cost should be included before accrual generation');
+assert.equal(monthRows[0].amount,1200,'FAIL monthly fixed cost amount');
+assert.equal(dayRows.length,1,'FAIL daily fixed cost row');
+assert.equal(dayRows[0].amount,40,'FAIL 1,200 EGP fixed cost should be allocated as 40 EGP/day in a 30-day month');
+console.log('PASS monthly fixed cost auto-inclusion and daily proration: 1,200 EGP / 30 = 40 EGP/day');
+
 const allocationMatch=html.match(/function overheadShareForProduct\(amount,product,totals,method\)\{[\s\S]*?\n\}/);
 assert.ok(allocationMatch,'FAIL overhead allocation helper can be extracted');
 const allocationFn=new Function('amount','product','totals','method',allocationMatch[0].replace(/^function overheadShareForProduct\(amount,product,totals,method\)\{/,'return (function(amount,product,totals,method){').replace(/\n\}$/,'\n})(amount,product,totals,method);'));
