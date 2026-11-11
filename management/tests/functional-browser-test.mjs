@@ -77,6 +77,9 @@ async function runScenario(name, contextOptions) {
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
   await page.locator('#buyKind').selectOption('raw');
   check('custom typed item remains supported', await page.locator('#buyName').getAttribute('list') === 'roflaRawChoices', 'free text with raw material suggestions');
+  check('supplier field offers suggestions and accepts typed names',
+    await page.locator('#buySupplier').getAttribute('list') === 'roflaSupplierChoices',
+    'supplier choices plus free text');
   await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
   await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
   await page.locator('.purchase-invoice-row').last().locator('.pi-qty').fill('2');
@@ -283,6 +286,25 @@ async function runScenario(name, contextOptions) {
   await tab('reports');
   await page.evaluate(() => { document.getElementById('reportMode').value='month'; document.getElementById('reportDate').value=new Date().toISOString().slice(0,10); window.renderReports(); });
   check('recurring expense counted once in profit', (await page.locator('#rExpenses').innerText()).includes('١٬٢٠٢') || (await page.locator('#rExpenses').innerText()).includes('1,202'), await page.locator('#rExpenses').innerText());
+  const fixedAllocation = await page.evaluate(() => ({
+    table: document.getElementById('productProfit').innerText,
+    note: document.getElementById('overheadAllocationNote').innerText,
+    fixedTotal: money(1200)
+  }));
+  check('fixed costs are allocated to products and displayed per sold unit',
+    fixedAllocation.table.includes('نصيبه من المصاريف الثابتة') &&
+    fixedAllocation.table.includes('المصاريف الثابتة للوحدة') &&
+    fixedAllocation.note.includes(fixedAllocation.fixedTotal),
+    fixedAllocation.note);
+  await page.locator('#recType').selectOption({ label: 'أخرى' });
+  await fill('recCustomType', 'صيانة مخصصة');
+  await fill('recAmount', 50);
+  await fill('recStartMonth', new Date().toISOString().slice(0,7));
+  await page.evaluate(() => window.addRecurringExpense());
+  d = await state();
+  check('custom recurring expense name can be saved',
+    d.recurringExpenses.some(x => x.type === 'صيانة مخصصة' && x.amount === 50),
+    'custom fixed expense name stored');
 
   // Customer credit, collection, daily close and audit trail.
   await tab('sell');
@@ -322,6 +344,18 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.recordCustomerPayment());
   d = await state();
   check('customer payment', d.sales.filter(x => x.customerName === 'عميل سداد').reduce((n,x)=>n+x.dueAmount,0) === 0 && d.customerPayments.length === 1, 'customer balance cleared');
+  await fill('sellQty', 1);
+  await fill('sellPrice', 7);
+  await fill('sellCustomer', '');
+  await fill('sellPaidNow', 7);
+  await page.locator('#sellPayMethod').selectOption('bank');
+  await page.locator('#sellChannel').selectOption({ label: 'أخرى' });
+  await fill('sellChannelOther', 'طلبات واتساب');
+  await page.evaluate(() => window.addSale());
+  d = await state();
+  check('custom sales channel can be entered and saved',
+    d.sales.some(x => x.channel === 'طلبات واتساب'),
+    'custom sales channel stored');
   const cashAfterCustomer = await page.evaluate(() => window.cashExpected());
   await tab('cash');
   await fill('closeCashActual', cashAfterCustomer);
