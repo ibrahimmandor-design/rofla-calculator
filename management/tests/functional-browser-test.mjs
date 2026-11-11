@@ -317,7 +317,7 @@ async function runScenario(name, contextOptions) {
   // Verify that changes are written locally while the test session is active,
   // then verify that an unauthenticated reload clears the local copy.
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rofla_mvp_v1') || 'null'));
-  check('local write snapshot', !!stored && stored.sales.length >= 2 && stored.returns.length === 2 && stored.expenses.length === 1, 'transaction snapshot written before sign-out');
+  check('local write snapshot', !!stored && stored.sales.length >= 2 && stored.returns.length === 2 && stored.expenses.length === 2 && stored.expenses.filter(x => x.accrualId).length === 1, 'transaction snapshot written before sign-out');
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => localStorage.getItem('rofla_mvp_v1') === null);
   d = await state();
