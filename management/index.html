@@ -77,7 +77,7 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ROFLA_BUILD_20261112_COMPLETE_REVIEW_V10
+// ROFLA_BUILD_20261112_COMPLETE_REVIEW_V11
 const KEY='rofla_mvp_v1';
 const SUPABASE_URL='https://tpcwyacybpwonsyuegjw.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_SSidbj0latH37a5vQHUsuQ_JU5OWiFi';
@@ -349,7 +349,7 @@ function renderCash(){let m=db.cashMovements||[],ins=m.filter(x=>x.kind==='in').
 function addEditRecipeRow(recipe={}){
  const host=document.getElementById('editRecipeRows');if(!host)return;
  const row=document.createElement('div');row.className='edit-recipe-row grid';
- row.innerHTML='<div class="field"><label>اسم الخامة</label><input class="ern" list="roflaItemChoices" placeholder="اسم الخامة"></div><div class="field"><label>كمية الوصفة الواحدة</label><input class="erq" type="number" min="0" step=".001" placeholder="الكمية"></div><div class="field"><label>الوحدة</label><select class="eru"><option>كيلو</option><option>جرام</option><option>لتر</option><option>ملليلتر</option><option>قطعة</option><option>صينية</option><option>علبة</option><option>كرتونة</option></select></div><button class="danger" type="button" onclick="this.closest('.edit-recipe-row').remove()">حذف</button>';
+ row.innerHTML='<div class="field"><label>اسم الخامة</label><input class="ern" list="roflaItemChoices" placeholder="اسم الخامة"></div><div class="field"><label>كمية الوصفة الواحدة</label><input class="erq" type="number" min="0" step=".001" placeholder="الكمية"></div><div class="field"><label>الوحدة</label><select class="eru"><option>كيلو</option><option>جرام</option><option>لتر</option><option>ملليلتر</option><option>قطعة</option><option>صينية</option><option>علبة</option><option>كرتونة</option></select></div><button class="danger" type="button" onclick="this.parentElement.remove()">حذف</button>';
  host.appendChild(row);row.querySelector('.ern').value=recipe.name||'';row.querySelector('.erq').value=recipe.qty??'';row.querySelector('.eru').value=recipe.unit||'كيلو';
 }
 function loadItemEditor(){
