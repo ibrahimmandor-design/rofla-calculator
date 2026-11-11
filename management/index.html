@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_FINAL_HANDOVER_V29 -->
+<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_FINAL_HANDOVER_V30 -->
 <style>
 :root{--wine:#74132e;--cream:#faf7f4;--ink:#30282a;--muted:#756b6e;--line:#eadfe2;--green:#287a50;--gold:#a66c16}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Tahoma,Arial,sans-serif}body.operator-mode .admin-tab{display:none}header{background:var(--wine);color:white;padding:18px 16px 16px}header h1{margin:0;font-size:23px}header p{margin:6px 0 0;font-size:13px;opacity:.88}.wrap{max-width:1050px;margin:auto;padding:14px}.notice{background:#fff4d9;border:1px solid #efd99f;border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.7;margin-bottom:13px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:12px 5px;font-size:13px;color:var(--ink);font-weight:bold;cursor:pointer}.tab.active{background:var(--wine);color:white;border-color:var(--wine)}.mode-toggle{grid-column:1/-1;border:1px dashed #b99aa4;background:#fff;border-radius:12px;padding:11px;color:var(--wine);font:inherit;font-weight:bold;cursor:pointer}.admin-tab{display:none}body.admin-mode .admin-tab{display:block}body.admin-mode .mode-toggle{background:#f5edf0}body.admin-mode #modeHint{display:block}.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px}.card h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.metric{background:white;border:1px solid var(--line);border-radius:13px;padding:12px}.metric small{color:var(--muted);display:block;font-size:11px}.metric strong{display:block;font-size:20px;margin-top:6px}.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid #d9cdd1;border-radius:10px;padding:12px;font:inherit;font-size:14px;background:white;min-height:44px}button.primary{border:0;background:var(--wine);color:white;border-radius:10px;padding:12px 17px;font:inherit;font-weight:bold;cursor:pointer;min-height:44px}button.soft{border:1px solid var(--line);background:white;border-radius:9px;padding:8px 11px;font:inherit;cursor:pointer}button.danger{border:0;background:#fbe9eb;color:#9b2535;border-radius:8px;padding:7px 10px;cursor:pointer}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:right;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:normal;font-size:11px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#f5edf0;color:var(--wine);font-size:11px}.empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}.hidden{display:none!important}.total{font-size:22px;font-weight:bold;color:var(--wine)}footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
@@ -433,10 +433,20 @@ function saveItemEdits(){
  item.type=type;item.category=val('editItemCategory');item.unit=unit;item.recipe=recipe;
  save();loadItemEditor();alert('تم تحديث الصنف والوصفة');
 }
+function getPeriodFixedRows(mode,selected){
+ if(mode==='day'){
+  const parts=selected.split('-').map(Number),days=new Date(parts[0],parts[1],0).getDate(),month=selected.slice(0,7);
+  return (db.recurringExpenses||[]).filter(x=>x.active&&String(x.startMonth||'')<=month).map(x=>({id:'daily-'+x.id,recurringId:x.id,period:month,dueDate:selected,type:x.type,amount:Number(x.amount||0)/days,status:'موزع يومياً',prorated:true}));
+ }
+ const existing=(db.expenseAccruals||[]).filter(x=>x.period===selected);
+ const seen=new Set(existing.map(x=>x.recurringId).filter(Boolean));
+ const missing=(db.recurringExpenses||[]).filter(x=>x.active&&String(x.startMonth||'')<=selected&&!seen.has(x.id)).map(x=>({id:'forecast-'+x.id,recurringId:x.id,period:selected,dueDate:selected+'-'+String(x.dueDay||1).padStart(2,'0'),type:x.type,amount:Number(x.amount||0),status:'مستحق — من الإعدادات',provisional:true}));
+ return [...existing,...missing];
+}
 function getPeriodOverhead(){
  const date=val('reportDate')||dateKey(new Date()),mode=val('reportMode')||'month',selected=mode==='day'?date:date.slice(0,7);
  const ex=(db.expenses||[]).filter(x=>!x.accrualId&&reportMatches(x.date,mode,selected)).reduce((n,x)=>n+Number(x.amount||0),0);
- const ac=(db.expenseAccruals||[]).filter(x=>mode==='day'?x.dueDate===selected:x.period===selected).reduce((n,x)=>n+Number(x.amount||0),0);
+ const ac=getPeriodFixedRows(mode,selected).reduce((n,x)=>n+Number(x.amount||0),0);
  return ex+ac;
 }
 function getPeriodSales(){
@@ -445,7 +455,7 @@ function getPeriodSales(){
 }
 function getPeriodOverheadSplit(){
  const date=val('reportDate')||dateKey(new Date()),mode=val('reportMode')||'month',selected=mode==='day'?date:date.slice(0,7);
- const fixed=(db.expenseAccruals||[]).filter(x=>mode==='day'?x.dueDate===selected:x.period===selected).reduce((n,x)=>n+Number(x.amount||0),0);
+ const fixed=getPeriodFixedRows(mode,selected).reduce((n,x)=>n+Number(x.amount||0),0);
  const other=(db.expenses||[]).filter(x=>!x.accrualId&&reportMatches(x.date,mode,selected)).reduce((n,x)=>n+Number(x.amount||0),0);
  return {fixed,other,total:fixed+other};
 }
@@ -646,7 +656,7 @@ function dateKey(d){let x=new Date(d);return x.getFullYear()+'-'+String(x.getMon
 function reportMatches(d,mode,selected){let x=new Date(d);if(mode==='day')return dateKey(x)===selected;let [y,m]=selected.split('-').map(Number);return x.getFullYear()===y&&x.getMonth()+1===m}
 function renderReports(){
 let mode=val('reportMode')||'month',date=val('reportDate')||dateKey(new Date()),selected=mode==='day'?date:date.slice(0,7);
-let sales=db.sales.filter(x=>reportMatches(x.date,mode,selected)),returns=(db.returns||[]).filter(x=>reportMatches(x.date,mode,selected)),expenses=db.expenses.filter(x=>!x.accrualId&&reportMatches(x.date,mode,selected)),accruals=(db.expenseAccruals||[]).filter(x=>mode==='day'?x.dueDate===selected:x.period===selected),productions=(db.productions||[]).filter(x=>reportMatches(x.date,mode,selected));
+let sales=db.sales.filter(x=>reportMatches(x.date,mode,selected)),returns=(db.returns||[]).filter(x=>reportMatches(x.date,mode,selected)),expenses=db.expenses.filter(x=>!x.accrualId&&reportMatches(x.date,mode,selected)),accruals=getPeriodFixedRows(mode,selected),productions=(db.productions||[]).filter(x=>reportMatches(x.date,mode,selected));
 let grossRevenue=sales.reduce((a,x)=>a+Number(x.price||0)-Number(x.commission||0),0),refunds=returns.reduce((a,x)=>a+Number(x.amount||0),0),revenue=grossRevenue-refunds,cogs=sales.reduce((a,x)=>a+(Number(x.cost)||0),0)-returns.reduce((a,x)=>a+(Number(x.cost)||0),0),wasteLoss=productions.reduce((a,x)=>a+(Number(x.wasteCost)||0),0),fixedOverhead=accruals.reduce((a,x)=>a+Number(x.amount||0),0),otherOverhead=expenses.reduce((a,x)=>a+Number(x.amount||0),0),overhead=fixedOverhead+otherOverhead,net=revenue-cogs-wasteLoss-overhead;
 set('reportPeriodLabel',mode==='day'?'تقرير يوم '+date:'تقرير شهر '+selected);set('rSales',money(revenue));set('rCogs',money(cogs));set('rExpenses',money(overhead));set('rWaste',money(wasteLoss));set('rNet',money(net));
 let by={};sales.forEach(x=>{by[x.name]=by[x.name]||{revenue:0,cost:0,qty:0};by[x.name].revenue+=Number(x.price||0)-Number(x.commission||0);by[x.name].cost+=Number(x.cost)||0;by[x.name].qty+=Number(x.qty)||0});
