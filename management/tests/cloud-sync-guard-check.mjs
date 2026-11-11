@@ -9,7 +9,7 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FULL_HANDOVER_V27/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V28/.test(html)],
   ['complete purchase-to-sale traceability columns are present', /قيمة المشتريات/.test(html) && /المرتجعات/.test(html) && /صافي المباع/.test(html) && /قيمة المخزون المتبقي/.test(html) && /function renderFlowSummary\(/.test(html)],
   ['supplier and customer inputs support saved choices and free typing', /buySupplier[\s\S]{0,180}اسم المورد/.test(html) && /roflaSupplierChoices/.test(html) && /roflaCustomerChoices/.test(html) && /setAttribute\('list','roflaSupplierChoices'\)/.test(html)],
   ['fixed overhead is separated and allocated to each sold unit', /function getPeriodOverheadSplit\(/.test(html) && /function overheadShareForProduct\(/.test(html) && /المصاريف الثابتة للوحدة/.test(html) && /نصيبه من المصاريف الثابتة/.test(html)],
