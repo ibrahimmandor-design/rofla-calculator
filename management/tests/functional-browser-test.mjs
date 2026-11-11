@@ -184,6 +184,16 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.recordCustomerPayment());
   d = await state();
   check('customer payment', d.sales.filter(x => x.customerName === 'عميل اختبار').reduce((n,x)=>n+x.dueAmount,0) === 0 && d.customerPayments.length === 1, 'customer balance cleared');
+  const creditSale = d.sales.find(x => x.customerName === 'عميل اختبار');
+  await tab('returns');
+  await page.locator('#returnItem').selectOption(product.id);
+  await page.locator('#returnSale').selectOption(creditSale.id);
+  await fill('returnQty', 1);
+  await fill('returnAmount', 5);
+  await page.locator('#returnPayMethod').selectOption('cash');
+  await page.evaluate(() => window.addReturn());
+  d = await state();
+  check('credit sale return settlement', d.sales.find(x => x.id === creditSale.id).dueAmount === 0 && d.returns[0].creditAdjusted === 3, '3 EGP receivable cancelled; only 2 EGP refunded in cash');
   const cashAfterCustomer = await page.evaluate(() => window.cashExpected());
   await tab('cash');
   await fill('closeCashActual', cashAfterCustomer);
@@ -195,7 +205,7 @@ async function runScenario(name, contextOptions) {
   // Verify that changes are written locally while the test session is active,
   // then verify that an unauthenticated reload clears the local copy.
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rofla_mvp_v1') || 'null'));
-  check('local write snapshot', !!stored && stored.sales.length >= 2 && stored.returns.length === 1 && stored.expenses.length === 1, 'transaction snapshot written before sign-out');
+  check('local write snapshot', !!stored && stored.sales.length >= 2 && stored.returns.length === 2 && stored.expenses.length === 1, 'transaction snapshot written before sign-out');
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => localStorage.getItem('rofla_mvp_v1') === null);
   d = await state();
