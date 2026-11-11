@@ -58,6 +58,10 @@ async function runScenario(name, contextOptions) {
     hintHidden: getComputedStyle(document.getElementById('modeHint')).display === 'none'
   }));
   check('return to daily view safely', returnedView.operatorMode && returnedView.adminHidden && returnedView.homeActive && returnedView.hintHidden, JSON.stringify(returnedView));
+  const initialCatalog = await state();
+  check('all starter sweets catalog items are marked for in-house production',
+    initialCatalog.items.length === 126 && initialCatalog.items.every(x => x.type === 'made'),
+    initialCatalog.items.length + ' catalog items; ' + initialCatalog.items.filter(x => x.type === 'made').length + ' marked made');
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
   const tab = async (id) => page.evaluate(id => window.showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
