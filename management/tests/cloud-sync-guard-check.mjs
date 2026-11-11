@@ -39,8 +39,8 @@ assert.ok(priceFnMatch,'FAIL suggested price function can be extracted');
 const priceHost={textContent:'',innerHTML:''};
 const priceDB={items:[{id:'item-1',name:'اختبار',type:'bought'}],stock:{'جاهز:اختبار':{costPer:10}}};
 const priceValues={priceItem:'item-1',targetMargin:'25'};
-new Function('db','val','document','money','overheadPerUnit',priceFnMatch[0]+';renderSuggestedPrice();')(
- priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج',()=>0
+new Function('db','val','document','money','overheadPerUnitBreakdown',priceFnMatch[0]+';renderSuggestedPrice();')(
+ priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج',()=>({fixed:0,other:0,total:0})
 );
 assert.ok(priceHost.innerHTML.includes('13.33 ج'),'FAIL 25% margin calculation: '+priceHost.innerHTML);
 console.log('PASS suggested price calculation: cost 10, margin 25%, price 13.33');
