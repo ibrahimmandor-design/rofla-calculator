@@ -130,6 +130,7 @@ async function handleCloudSession(session){
  if(!session){clearLocalSessionData();showAuthState(null);return;}
  showAuthState(session);
  if(session){
+  db=loadDB();lastSavedSnapshot=JSON.stringify(db);
   cloudReady=false;setSyncMessage('جاري تحميل بيانات المحل...');
   try{await loadCloudData();document.getElementById('cloudNotice').textContent='بيانات ROFLA متصلة بالسحابة ومتاحة على أجهزتك بعد تسجيل الدخول.'}
   catch(e){setSyncMessage('فشل الاتصال بقاعدة البيانات: '+e.message)}
@@ -201,7 +202,7 @@ const DB_ARRAYS=['items','purchases','supplierPayments','cashMovements','cashCou
 const emptyDB=()=>({items:[],stock:{},purchases:[],supplierPayments:[],cashMovements:[],cashCounts:[],cashOpening:0,cashOpeningSet:false,productions:[],sales:[],returns:[],expenses:[],market:[],movements:[],supplierPrices:[],expiryBatches:[],customers:[],customerPayments:[],dailyClosings:[],auditLog:[]});
 function normalizeDB(source){if(!source||typeof source!=='object'||Array.isArray(source))throw new Error('invalid data');const base=emptyDB(),out={...base,...source};DB_ARRAYS.forEach(k=>{if(!Array.isArray(out[k]))out[k]=[]});if(!out.stock||typeof out.stock!=='object'||Array.isArray(out.stock))out.stock={};if(!Number.isFinite(Number(out.cashOpening))||Number(out.cashOpening)<0)out.cashOpening=0;out.cashOpening=Number(out.cashOpening);out.cashOpeningSet=!!out.cashOpeningSet;return out}
 function loadDB(){try{const raw=localStorage.getItem(KEY);if(!raw)return emptyDB();return normalizeDB(JSON.parse(raw))}catch(e){console.error('تعذر قراءة بيانات رفلا',e);return emptyDB()}}
-let db=loadDB();
+let db=emptyDB();
 let lastSavedSnapshot=JSON.stringify(db);
 function addAuditEntry(){try{const before=JSON.parse(lastSavedSnapshot||'{}'),changed=[];DB_ARRAYS.filter(k=>k!=='auditLog').forEach(k=>{if(JSON.stringify(before[k]??[])!==JSON.stringify(db[k]??[]))changed.push(k)});if(JSON.stringify(before.stock||{})!==JSON.stringify(db.stock||{}))changed.push('stock');if(before.cashOpening!==db.cashOpening||before.cashOpeningSet!==db.cashOpeningSet)changed.push('cash');if(changed.length){db.auditLog=db.auditLog||[];db.auditLog.unshift({id:id(),date:new Date().toISOString(),action:'تحديث بيانات',modules:[...new Set(changed)],summary:'تغيير في: '+[...new Set(changed)].join('، ')});db.auditLog=db.auditLog.slice(0,500)}}catch(e){console.warn('تعذر تسجيل سجل التعديلات',e)}}
 
