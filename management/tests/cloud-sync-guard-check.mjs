@@ -8,12 +8,15 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_CLOUD_SYNC_AUTOREFRESH_V7/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_COMPLETE_REVIEW_V8/.test(html)],
   ['cloud refresh tracks pending writes', /cloudWritesPending=0/.test(html) && /cloudWritesPending>0/.test(html)],
   ['automatic cloud refresh every 30 seconds', /setInterval\(\(\)=>\{if\(document\.visibilityState==='visible'\)refreshCloudIfSafe\(false\)\},30000\)/.test(html)],
   ['refreshes when app returns to foreground', /addEventListener\('focus',\(\)=>refreshCloudIfSafe\(false\)\)/.test(html)],
   ['automatic refresh protects local unsaved changes', /if\(!force&&\(cloudSaveFailed\|\|JSON\.stringify\(db\)!==lastSavedSnapshot\)\)return false/.test(html)],
-  ['manual refresh warns before replacing failed local changes', /force&&\(!cloudReady\|\|cloudSaveFailed\)/.test(html)]
+  ['manual refresh warns before replacing failed local changes', /force&&\(!cloudReady\|\|cloudSaveFailed\)/.test(html)],
+  ['optional suggested price calculator is present', /id="priceItem"/.test(html) && /id="targetMargin"/.test(html)],
+  ['suggested price uses actual unit cost and margin formula', /const price=cost\/\(1-margin\/100\)/.test(html)],
+  ['suggested price never saves or changes sale price', /function renderSuggestedPrice\(\)/.test(html) && !/function renderSuggestedPrice\(\)[\s\S]{0,1500}save\(/.test(html)]
 ];
 for (const [name, ok] of checks) { assert.ok(ok, 'FAIL '+name); console.log('PASS '+name); }
 console.log('CLOUD SYNC GUARD RESULT: PASS ('+checks.length+' checks)');
