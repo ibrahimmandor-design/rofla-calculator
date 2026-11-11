@@ -67,6 +67,16 @@ async function runScenario(name, contextOptions) {
   await fill('cashOpeningInput', 40);
   await page.evaluate(() => window.setCashOpening());
   await tab('buy');
+  const choiceLists = await page.evaluate(() => ({
+    raw: [...document.querySelectorAll('#roflaRawChoices option')].map(x=>x.value),
+    ready: [...document.querySelectorAll('#roflaReadyChoices option')].map(x=>x.value)
+  }));
+  check('choice-first ingredient catalog', ['دقيق','سمن بلدي','سميد','زبدة','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
+  check('ready sweets catalog', ['بسبوسة سادة','جاتوه شوكولاتة','باتيه جبنة'].every(x=>choiceLists.ready.includes(x)), 'eastern, western and bakery products are selectable');
+  await page.locator('#buyKind').selectOption('ready');
+  check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
+  await page.locator('#buyKind').selectOption('raw');
+  check('custom typed item remains supported', await page.locator('#buyName').getAttribute('list') === 'roflaRawChoices', 'free text with raw material suggestions');
   await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
   await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
   await page.locator('.purchase-invoice-row').last().locator('.pi-qty').fill('2');
