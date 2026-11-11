@@ -35,6 +35,29 @@ async function runScenario(name, contextOptions) {
     document.querySelector('.tabs').classList.remove('hidden');
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('hidden'));
   });
+  const operatorView = await page.evaluate(() => ({
+    defaultMode: document.body.classList.contains('operator-mode') && !document.body.classList.contains('admin-mode'),
+    visibleDailyTabs: [...document.querySelectorAll('#mainNavigation .tab:not(.admin-tab)')].filter(b => getComputedStyle(b).display !== 'none').map(b => b.dataset.tab),
+    hiddenAdminTabs: [...document.querySelectorAll('#mainNavigation .admin-tab')].every(b => getComputedStyle(b).display === 'none'),
+    togglePresent: !!document.getElementById('adminModeToggle')
+  }));
+  check('operator mode default', operatorView.defaultMode && operatorView.visibleDailyTabs.join(',') === 'home,sell,buy,make,returns' && operatorView.hiddenAdminTabs && operatorView.togglePresent, JSON.stringify(operatorView));
+  await page.locator('#adminModeToggle').click();
+  const adminView = await page.evaluate(() => ({
+    enabled: document.body.classList.contains('admin-mode') && !document.body.classList.contains('operator-mode'),
+    visibleAdminTabs: [...document.querySelectorAll('#mainNavigation .admin-tab')].filter(b => getComputedStyle(b).display !== 'none').length,
+    hintVisible: getComputedStyle(document.getElementById('modeHint')).display !== 'none'
+  }));
+  check('admin tools expand on demand', adminView.enabled && adminView.visibleAdminTabs === 6 && adminView.hintVisible, JSON.stringify(adminView));
+  await page.locator('#mainNavigation .admin-tab[data-tab="reports"]').click();
+  await page.locator('#adminModeToggle').click();
+  const returnedView = await page.evaluate(() => ({
+    operatorMode: document.body.classList.contains('operator-mode') && !document.body.classList.contains('admin-mode'),
+    adminHidden: [...document.querySelectorAll('#mainNavigation .admin-tab')].every(b => getComputedStyle(b).display === 'none'),
+    homeActive: document.getElementById('home').classList.contains('active'),
+    hintHidden: getComputedStyle(document.getElementById('modeHint')).display === 'none'
+  }));
+  check('return to daily view safely', returnedView.operatorMode && returnedView.adminHidden && returnedView.homeActive && returnedView.hintHidden, JSON.stringify(returnedView));
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
   const tab = async (id) => page.evaluate(id => window.showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
