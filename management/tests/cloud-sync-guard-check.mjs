@@ -5,7 +5,7 @@ const checks = [
   ['session load deduplication state', /activeCloudUserId=null,cloudLoadPromise=null/.test(html)],
   ['same-user concurrent auth event guard', /if\(activeCloudUserId===userId\)[\s\S]{0,180}if\(cloudLoadPromise\)/.test(html)],
   ['failed initial cloud bootstrap is not reported as connected', /const saved=await persistCloudData\(\);\s*if\(!saved\)/.test(html)],
-  ['cloud save returns explicit success', /cloudRevision=Number\(data\);setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
+  ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
   ['new cloud sync build marker', /ROFLA_BUILD_20261112_CLOUD_SYNC_AUTOREFRESH_V7/.test(html)],
