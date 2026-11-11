@@ -19,7 +19,7 @@ const checks = [
   ['automatic refresh protects local unsaved changes', /if\(!force&&\(cloudSaveFailed\|\|JSON\.stringify\(db\)!==lastSavedSnapshot\)\)return false/.test(html)],
   ['manual refresh warns before replacing failed local changes', /force&&\(!cloudReady\|\|cloudSaveFailed\)/.test(html)],
   ['optional suggested price calculator is present', /id="priceItem"/.test(html) && /id="targetMargin"/.test(html)],
-  ['suggested price uses full unit cost and margin formula', /price=fullCost\\/\\(1-margin\\/100\\)/.test(html)],
+  ['suggested price uses full unit cost and margin formula', html.includes('price=fullCost/(1-margin/100)')],
   ['suggested price never saves or changes sale price', !!priceFnMatch && !priceFnMatch[0].includes('save(')],
   ['existing product editor is present', /id="editItemSelect"/.test(html) && /id="editRecipeRows"/.test(html)],
   ['recipe editor supports add, edit and save', /function addEditRecipeRow\(/.test(html) && /function loadItemEditor\(/.test(html) && /function saveItemEdits\(/.test(html)],
