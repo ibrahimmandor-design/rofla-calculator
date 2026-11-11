@@ -16,7 +16,7 @@ const checks = [
   ['manual refresh warns before replacing failed local changes', /force&&\(!cloudReady\|\|cloudSaveFailed\)/.test(html)],
   ['optional suggested price calculator is present', /id="priceItem"/.test(html) && /id="targetMargin"/.test(html)],
   ['suggested price uses actual unit cost and margin formula', /const price=cost\/\(1-margin\/100\)/.test(html)],
-  ['suggested price never saves or changes sale price', /function renderSuggestedPrice\(\)/.test(html) && !/function renderSuggestedPrice\(\)[\s\S]{0,1500}save\(/.test(html)],
+  ['suggested price never saves or changes sale price', !!priceFnMatch && !priceFnMatch[0].includes('save(')],
   ['existing product editor is present', /id="editItemSelect"/.test(html) && /id="editRecipeRows"/.test(html)],
   ['recipe editor supports add, edit and save', /function addEditRecipeRow\(/.test(html) && /function loadItemEditor\(/.test(html) && /function saveItemEdits\(/.test(html)],
   ['product type and unit changes are blocked after transactions', /if\(\(type!==item\.type\|\|unit!==item\.unit\)&&\(hasHistory\|\|hasStock\)\)/.test(html)],
