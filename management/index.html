@@ -75,13 +75,13 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ROFLA_BUILD_20261111_CREDIT_RETURNS_V5
+// ROFLA_BUILD_20261112_CLOUD_SYNC_RACEFIX_V6
 const KEY='rofla_mvp_v1';
 const SUPABASE_URL='https://tpcwyacybpwonsyuegjw.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_SSidbj0latH37a5vQHUsuQ_JU5OWiFi';
 const ROFLA_EMAIL='ibrahimmandor@icloud.com';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let cloudRevision=0,cloudReady=false,cloudBusy=false,cloudQueue=Promise.resolve(),suppressCloud=false;
+let cloudRevision=0,cloudReady=false,cloudBusy=false,cloudQueue=Promise.resolve(),suppressCloud=false,activeCloudUserId=null,cloudLoadPromise=null;
 function setAuthMessage(s){const e=document.getElementById('authMessage');if(e)e.textContent=s}
 function setSyncMessage(s){const e=document.getElementById('syncMessage');if(e)e.textContent=s}
 function showAuthState(session){
@@ -101,41 +101,52 @@ async function loadCloudData(){
  const remoteHasData=Object.keys(remote).length>0;
  if(!remoteHasData&&localHasData){
    cloudReady=true;
-   await persistCloudData();
+   const saved=await persistCloudData();
+   if(!saved){cloudReady=false;throw new Error('لم يتم تأكيد رفع البيانات المحلية إلى السحابة؛ احتفظ بنسختك الحالية ولا تغلق الصفحة حتى مراجعة الاتصال.');}
  }else{
-   suppressCloud=true;db=normalizeDB(remote);ensureStarterCatalog();localStorage.setItem(KEY,JSON.stringify(db));lastSavedSnapshot=JSON.stringify(db);suppressCloud=false;renderAll();
+   suppressCloud=true;
+   try{db=normalizeDB(remote);ensureStarterCatalog();localStorage.setItem(KEY,JSON.stringify(db));lastSavedSnapshot=JSON.stringify(db);}
+   finally{suppressCloud=false;}
+   renderAll();
  }
  cloudReady=true;lastSavedSnapshot=JSON.stringify(db);setSyncMessage('متصل بالسحابة — آخر إصدار '+cloudRevision);
 }
 function persistCloudData(){
  cloudQueue=cloudQueue.then(async()=>{
-  if(!cloudReady||suppressCloud)return;
+  if(!cloudReady||suppressCloud)return false;
   const snapshot=JSON.parse(JSON.stringify(db));
   const {data,error}=await supabaseClient.rpc('save_rofla_data',{p_data:snapshot,p_expected_revision:cloudRevision});
   if(error){
    if(String(error.message||'').includes('ROFLA_CONFLICT')){
     cloudReady=false;setSyncMessage('فيه تعديل أحدث من جهاز آخر. أوقفنا الحفظ مؤقتًا لحماية البيانات؛ حدّث البيانات من السحابة قبل المتابعة.');
-    return;
+    return false;
    }
-   setSyncMessage('تعذر الحفظ السحابي: '+error.message);return;
+   setSyncMessage('تعذر الحفظ السحابي: '+error.message);return false;
   }
-  cloudRevision=Number(data);setSyncMessage('تم حفظ التغييرات سحابيًا — الإصدار '+cloudRevision);
- }).catch(e=>setSyncMessage('خطأ في المزامنة: '+e.message));
+  cloudRevision=Number(data);setSyncMessage('تم حفظ التغييرات سحابيًا — الإصدار '+cloudRevision);return true;
+ }).catch(e=>{setSyncMessage('خطأ في المزامنة: '+e.message);return false;});
  return cloudQueue;
 }
-function clearLocalSessionData(){cloudReady=false;db=emptyDB();localStorage.removeItem(KEY);lastSavedSnapshot=JSON.stringify(db)}
+function clearLocalSessionData(){cloudReady=false;activeCloudUserId=null;cloudLoadPromise=null;db=emptyDB();localStorage.removeItem(KEY);lastSavedSnapshot=JSON.stringify(db)}
 async function handleCloudSession(session){
  if(session&&session.user&&String(session.user.email||'').toLowerCase()!==ROFLA_EMAIL){
   await supabaseClient.auth.signOut();clearLocalSessionData();showAuthState(null);setAuthMessage('هذا البريد غير مصرح له باستخدام بيانات ROFLA.');return;
  }
  if(!session){clearLocalSessionData();showAuthState(null);return;}
  showAuthState(session);
- if(session){
-  db=loadDB();lastSavedSnapshot=JSON.stringify(db);
-  cloudReady=false;setSyncMessage('جاري تحميل بيانات المحل...');
-  try{await loadCloudData();document.getElementById('cloudNotice').textContent='بيانات ROFLA متصلة بالسحابة ومتاحة على أجهزتك بعد تسجيل الدخول.'}
-  catch(e){setSyncMessage('فشل الاتصال بقاعدة البيانات: '+e.message)}
+ const userId=session.user.id;
+ if(activeCloudUserId===userId){
+  if(cloudLoadPromise){await cloudLoadPromise;return;}
+  if(cloudReady)return;
  }
+ activeCloudUserId=userId;
+ db=loadDB();lastSavedSnapshot=JSON.stringify(db);
+ cloudReady=false;setSyncMessage('جاري تحميل بيانات المحل...');
+ cloudLoadPromise=(async()=>{
+  try{await loadCloudData();document.getElementById('cloudNotice').textContent='بيانات ROFLA متصلة بالسحابة ومتاحة على أجهزتك بعد تسجيل الدخول.'}
+  catch(e){cloudReady=false;setSyncMessage('فشل الاتصال بقاعدة البيانات: '+e.message)}
+ })();
+ try{await cloudLoadPromise;}finally{cloudLoadPromise=null;}
 }
 document.getElementById('passwordLogin').addEventListener('click',async()=>{
  const username=(document.getElementById('authUsername').value||'').trim().toUpperCase();
