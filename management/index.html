@@ -261,7 +261,7 @@ for(let line of lines){
  moveStock(line.name,line.kind==='raw'?'شراء خامة':'شراء صنف جاهز',line.stockQty,line.stockUnit,supplier||'فاتورة شراء',purchaseId,line.key)
 }
 if(payMethod==='cash'&&paid>0)cashMove('out',paid,'سداد فاتورة مشتريات '+(invoiceNo||invoiceId),invoiceId);
-['purchaseInvoiceSupplier','purchaseInvoiceNo','purchaseInvoicePaid','purchaseInvoiceNote'].forEach(x=>{let e=document.getElementById(x);if(e)e.value=''});
+['purchaseInvoiceSupplier','purchaseInvoiceNo','purchaseInvoicePaid','purchaseInvoiceNote','purchaseExpiry'].forEach(x=>{let e=document.getElementById(x);if(e)e.value=''});
 document.getElementById('purchaseInvoiceRows').innerHTML='';document.getElementById('purchaseInvoiceDocument').value='no_invoice';document.getElementById('purchaseInvoicePay').value='cash';addPurchaseInvoiceRow();save();
 alert('تم حفظ فاتورة الشراء بإجمالي '+money(total)+' وتحديث المخزون')
 }
