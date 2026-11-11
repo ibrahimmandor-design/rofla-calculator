@@ -62,6 +62,11 @@ async function runScenario(name, contextOptions) {
   check('all starter sweets catalog items are marked for in-house production',
     initialCatalog.items.length === 126 && initialCatalog.items.every(x => x.type === 'made'),
     initialCatalog.items.length + ' catalog items; ' + initialCatalog.items.filter(x => x.type === 'made').length + ' marked made');
+  const initialFlow = await page.locator('#stockFlowSummary').innerText();
+  const flowRows = await page.locator('#stockFlowSummary tbody tr').count();
+  check('lifecycle ledger lists products and raw materials before first purchase',
+    flowRows >= 200 && initialFlow.includes('بسبوسة سادة') && initialFlow.includes('دقيق'),
+    flowRows + ' visible catalog and ingredient rows with zero starting balances');
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
   const tab = async (id) => page.evaluate(id => window.showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
