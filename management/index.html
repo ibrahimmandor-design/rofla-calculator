@@ -361,6 +361,7 @@ function renderSmartAlerts(){
  if(low.length)alerts.push('فيه '+low.length+' خامة أو صنف وصل لحد التنبيه ويحتاج مراجعة شراء.');
  let due={};(db.purchases||[]).forEach(p=>{let d=Math.max(0,Number(p.cost||0)-Number(p.paid||0));if(p.supplier&&d>0)due[p.supplier]=(due[p.supplier]||0)+d});
  let dueTotal=Object.values(due).reduce((a,b)=>a+b,0);if(dueTotal>0)alerts.push('مستحقات موردين غير مسددة: '+money(dueTotal)+'.');
+ let customerDue=(db.sales||[]).reduce((n,x)=>n+Math.max(0,Number(x.dueAmount||0)),0);if(customerDue>0)alerts.push('مبالغ مستحقة عند العملاء: '+money(customerDue)+'.');
  if(!db.cashOpeningSet)alerts.push('لم يتم تسجيل رصيد بداية الخزنة.');
  let today=dateKey(new Date()),todaySales=(db.sales||[]).filter(x=>dateKey(x.date)===today);
  if(todaySales.length===0)alerts.push('لا توجد مبيعات مسجلة اليوم؛ لو المحل شغال تأكد من تسجيل البيع.');
