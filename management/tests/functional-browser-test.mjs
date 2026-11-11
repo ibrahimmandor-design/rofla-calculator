@@ -192,10 +192,14 @@ async function runScenario(name, contextOptions) {
   check('daily close', d.dailyClosings.length === 1 && d.dailyClosings[0].difference === 0, 'daily cash reconciled');
   check('audit log', d.auditLog.length >= 5, d.auditLog.length + ' change records');
 
-  // Verify local persistence after a reload.
+  // Verify that changes are written locally while the test session is active,
+  // then verify that an unauthenticated reload clears the local copy.
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('rofla_mvp_v1') || 'null'));
+  check('local write snapshot', !!stored && stored.sales.length >= 2 && stored.returns.length === 1 && stored.expenses.length === 1, 'transaction snapshot written before sign-out');
   await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => localStorage.getItem('rofla_mvp_v1') === null);
   d = await state();
-  check('local persistence', d.sales.length === 1 && d.returns.length === 1 && d.expenses.length === 1, 'transactions survive page reload');
+  check('signed-out reload cleanup', d.sales.length === 0 && localStorage.getItem('rofla_mvp_v1') === null, 'private local data cleared without owner session');
   check('browser JavaScript errors', jsErrors.length === 0, jsErrors.join(' | ') || '0 errors');
   await context.close();
 }
