@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_FINAL_HANDOVER_V28 -->
+<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_FINAL_HANDOVER_V29 -->
 <style>
 :root{--wine:#74132e;--cream:#faf7f4;--ink:#30282a;--muted:#756b6e;--line:#eadfe2;--green:#287a50;--gold:#a66c16}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Tahoma,Arial,sans-serif}body.operator-mode .admin-tab{display:none}header{background:var(--wine);color:white;padding:18px 16px 16px}header h1{margin:0;font-size:23px}header p{margin:6px 0 0;font-size:13px;opacity:.88}.wrap{max-width:1050px;margin:auto;padding:14px}.notice{background:#fff4d9;border:1px solid #efd99f;border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.7;margin-bottom:13px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:12px 5px;font-size:13px;color:var(--ink);font-weight:bold;cursor:pointer}.tab.active{background:var(--wine);color:white;border-color:var(--wine)}.mode-toggle{grid-column:1/-1;border:1px dashed #b99aa4;background:#fff;border-radius:12px;padding:11px;color:var(--wine);font:inherit;font-weight:bold;cursor:pointer}.admin-tab{display:none}body.admin-mode .admin-tab{display:block}body.admin-mode .mode-toggle{background:#f5edf0}body.admin-mode #modeHint{display:block}.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px}.card h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.metric{background:white;border:1px solid var(--line);border-radius:13px;padding:12px}.metric small{color:var(--muted);display:block;font-size:11px}.metric strong{display:block;font-size:20px;margin-top:6px}.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid #d9cdd1;border-radius:10px;padding:12px;font:inherit;font-size:14px;background:white;min-height:44px}button.primary{border:0;background:var(--wine);color:white;border-radius:10px;padding:12px 17px;font:inherit;font-weight:bold;cursor:pointer;min-height:44px}button.soft{border:1px solid var(--line);background:white;border-radius:9px;padding:8px 11px;font:inherit;cursor:pointer}button.danger{border:0;background:#fbe9eb;color:#9b2535;border-radius:8px;padding:7px 10px;cursor:pointer}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:right;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:normal;font-size:11px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#f5edf0;color:var(--wine);font-size:11px}.empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}.hidden{display:none!important}.total{font-size:22px;font-weight:bold;color:var(--wine)}footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
@@ -595,10 +595,15 @@ function renderDashboardSummary(){
  const profitEl=document.getElementById('mProfit');if(profitEl)profitEl.style.color=net<0?'#b42318':'#287a50';
 }
 function renderFlowSummary(){
- const keys=Object.keys(db.stock||{});
+ const rawNames=[...new Set([...(ROFLA_RAW_MATERIALS||[]),...(db.purchases||[]).filter(p=>p.kind==='raw').map(p=>p.name),...Object.entries(db.stock||{}).filter(([k])=>k.startsWith('خامة:')).map(([k])=>k.slice(5)),...(db.productions||[]).flatMap(p=>(p.used||[]).map(u=>u.name))])];
+ const productKeys=(db.items||[]).map(x=>(x.type==='bought'?'جاهز:':'منتج:')+x.name);
+ const purchaseKeys=(db.purchases||[]).map(p=>(p.kind==='raw'?'خامة:':p.kind==='ready'?'جاهز:':'منتج:')+p.name);
+ const keys=[...new Set([...Object.keys(db.stock||{}),...productKeys,...rawNames.map(n=>'خامة:'+n),...purchaseKeys])];
  const rows=keys.map(key=>{
-  const s=db.stock[key],moves=(db.movements||[]).filter(m=>m.stockKey===key);
+  const item=db.items.find(x=>x.name===key.replace(/^(خامة:|جاهز:|منتج:)/,''));
   const isRaw=key.startsWith('خامة:'),isReady=key.startsWith('جاهز:');
+  const s=db.stock[key]||{name:key.replace(/^(خامة:|جاهز:|منتج:)/,''),kind:isRaw?'raw':isReady?'ready':'finished',qty:0,unit:item?.unit||'—',costPer:0};
+  const moves=(db.movements||[]).filter(m=>m.stockKey===key);
   const purchases=(db.purchases||[]).filter(p=>p.name===s.name&&(isRaw?p.kind==='raw':isReady?p.kind==='ready':false));
   const purchaseInvoices=new Set(purchases.map(p=>p.invoiceId||p.id));
   const firstPurchase=purchases.slice().sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
@@ -607,7 +612,8 @@ function renderFlowSummary(){
   const returns=(db.returns||[]).filter(x=>x.name===s.name);
   const bought=moves.filter(m=>String(m.kind||'').startsWith('شراء')).reduce((n,m)=>n+Math.max(0,Number(m.qty)||0),0);
   const produced=moves.filter(m=>m.kind==='ناتج صالح للبيع').reduce((n,m)=>n+Math.max(0,Number(m.qty)||0),0);
-  const sold=moves.filter(m=>m.kind==='بيع').reduce((n,m)=>n+Math.abs(Math.min(0,Number(m.qty)||0)),0);
+  const soldMoves=moves.filter(m=>m.kind==='بيع').reduce((n,m)=>n+Math.abs(Math.min(0,Number(m.qty)||0)),0);
+  const sold=soldMoves||sales.reduce((n,x)=>n+Math.max(0,Number(x.qty)||0),0);
   const used=moves.filter(m=>m.kind==='استهلاك إنتاج').reduce((n,m)=>n+Math.abs(Math.min(0,Number(m.qty)||0)),0);
   const returnedQty=returns.reduce((n,x)=>n+Math.max(0,Number(x.qty)||0),0);
   const netSold=Math.max(0,sold-returnedQty);
@@ -623,7 +629,7 @@ function renderFlowSummary(){
   return '<tr><td>'+esc(s.name)+'</td><td>'+type+'</td><td>'+firstDate+'</td><td>'+purchaseInvoices.size.toLocaleString('ar-EG')+'</td><td>'+bought.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+money(purchaseValue)+'</td><td>'+productions.length.toLocaleString('ar-EG')+'</td><td>'+batchCount.toLocaleString('ar-EG')+'</td><td>'+produced.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+money(productionCost)+'</td><td>'+saleInvoices.size.toLocaleString('ar-EG')+'</td><td>'+sold.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+returnedQty.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+netSold.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+money(averageSale)+'</td><td>'+used.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td><b>'+Number(s.qty||0).toLocaleString('ar-EG')+' '+esc(s.unit)+'</b></td><td>'+money(unitCost)+'</td><td>'+money(stockValue)+'</td><td>'+money(revenue)+'</td></tr>';
  });
  const headings=['الصنف / الخامة','النوع','أول شراء','فواتير الشراء','إجمالي الكمية المشتراة','قيمة المشتريات','مرات تسجيل الإنتاج','دفعات الإنتاج','إجمالي الناتج الصالح','تكلفة الإنتاج المباشرة','فواتير البيع','إجمالي المباع','المرتجعات','صافي المباع','متوسط سعر البيع للوحدة','استهلاك الإنتاج','المتبقي الحالي','تكلفة الوحدة الحالية','قيمة المخزون المتبقي','صافي قيمة البيع'];
- setHTML('stockFlowSummary','<div style="overflow-x:auto">'+table(rows,headings)+'</div><p class="muted">الشراء والإنتاج والبيع والمرتجعات محسوبة من الحركات المسجلة فعلياً. قيمة المشتريات وتكلفة الإنتاج مبالغ مسجلة، والمتبقي بقيمة متوسط تكلفة الوحدة الحالي. لا يتم تقدير أي كمية أو سعر غير مسجل.</p>');
+ setHTML('stockFlowSummary','<div style="overflow-x:auto">'+table(rows,headings)+'</div><p class="muted">كل كتالوج الأصناف والخامات المقترحة ظاهر حتى قبل أول حركة، ويبدأ الرصيد بصفر والوحدة للخامة تظهر بعد أول شراء. الشراء والإنتاج والبيع والمرتجعات محسوبة من الحركات المسجلة فعلياً؛ لا يتم تقدير أي كمية أو سعر غير مسجل.</p>');
 }
 function renderSetupProgress(){
  const total=db.items.length,made=db.items.filter(x=>x.type==='made'),bought=db.items.filter(x=>x.type==='bought'),recipes=made.filter(x=>Array.isArray(x.recipe)&&x.recipe.length>0).length,stockCount=Object.values(db.stock).filter(x=>Number(x.qty)>0).length,activity=(db.purchases||[]).length+(db.productions||[]).length+(db.sales||[]).length+(db.expenses||[]).length;
