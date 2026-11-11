@@ -273,7 +273,7 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.generateExpenseAccruals());
   d = await state();
   check('recurring expense monthly accrual is idempotent', d.recurringExpenses.length === 1 && d.expenseAccruals.length === 1 && d.expenseAccruals[0].amount === 1200, 'one 1,200 EGP accrual despite generating twice');
-  await page.evaluate(() => { window.prompt = () => 'cash'; window.payExpenseAccrual(db.expenseAccruals[0].id); });
+  await page.evaluate(() => { window.prompt = () => 'bank'; window.payExpenseAccrual(db.expenseAccruals[0].id); });
   d = await state();
   check('recurring expense payment linked once', d.expenseAccruals[0].status === 'مدفوع' && d.expenses.filter(x => x.accrualId).length === 1, 'payment linked to its accrual');
   await tab('reports');
