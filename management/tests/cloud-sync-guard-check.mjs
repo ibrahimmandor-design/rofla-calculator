@@ -9,7 +9,7 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_COMPLETE_REVIEW_V16/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V25/.test(html)],
   ['baking pan unit is available across unit selectors', (html.match(/<option>صاج<\/option>/g)||[]).length >= 5],
   ['live setup progress overview is present', /id="setupProgress"/.test(html) && /function renderSetupProgress\(/.test(html) && /renderSetupProgress\(\)/.test(html)],
   ['setup overview reads real catalog, recipe, stock and activity counts', /const total=db\.items\.length/.test(html) && /recipes=made\.filter/.test(html) && /stockCount=Object\.values\(db\.stock\)/.test(html) && /activity=\(db\.purchases/.test(html)],
