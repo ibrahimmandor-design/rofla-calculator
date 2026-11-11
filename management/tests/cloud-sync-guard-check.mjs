@@ -9,7 +9,7 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_COMPLETE_REVIEW_V13/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_COMPLETE_REVIEW_V14/.test(html)],
   ['cloud refresh tracks pending writes', /cloudWritesPending=0/.test(html) && /cloudWritesPending>0/.test(html)],
   ['automatic cloud refresh every 30 seconds', /setInterval\(\(\)=>\{if\(document\.visibilityState==='visible'\)refreshCloudIfSafe\(false\)\},30000\)/.test(html)],
   ['refreshes when app returns to foreground', /addEventListener\('focus',\(\)=>refreshCloudIfSafe\(false\)\)/.test(html)],
@@ -20,6 +20,7 @@ const checks = [
   ['suggested price never saves or changes sale price', !!priceFnMatch && !priceFnMatch[0].includes('save(')],
   ['existing product editor is present', /id="editItemSelect"/.test(html) && /id="editRecipeRows"/.test(html)],
   ['recipe editor supports add, edit and save', /function addEditRecipeRow\(/.test(html) && /function loadItemEditor\(/.test(html) && /function saveItemEdits\(/.test(html)],
+  ['product editor preserves select options', /document\.getElementById\('editItemType'\)\.value=item\.type/.test(html) && /document\.getElementById\('editItemCategory'\)\.value/.test(html)],
   ['product type and unit changes are blocked after transactions', /if\(\(type!==item\.type\|\|unit!==item\.unit\)&&\(hasHistory\|\|hasStock\)\)/.test(html)],
   ['manufactured product requires recipe ingredients', /if\(!recipe\.length\)return alert\('أضف خامة واحدة على الأقل لو الصنف بيتصنع في المحل'\)/.test(html)]
 ];
