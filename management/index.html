@@ -270,7 +270,7 @@ function ensureStarterCatalog(){
 }
 function setupChoiceLists(){
  const readyItems=[...new Set([...Object.values(ROFLA_STARTER_CATALOG).flat(),...db.items.map(x=>x.name)])];
- const rawItems=[...new Set([...ROFLA_RAW_MATERIALS,...Object.values(db.stock||{}).filter(x=>x.kind==='raw').map(x=>x.name.replace(/^بواقي:\\s*/,'')),...(db.purchases||[]).filter(x=>x.kind==='raw').map(x=>x.name)])];
+ const rawItems=[...new Set([...ROFLA_RAW_MATERIALS,...Object.values(db.stock||{}).filter(x=>x.kind==='raw').map(x=>x.name.replace(/^بواقي:\s*/,'')),...(db.purchases||[]).filter(x=>x.kind==='raw').map(x=>x.name)])];
  const allItems=[...new Set([...readyItems,...rawItems])];
  const ensureList=(id,values)=>{let el=document.getElementById(id);if(!el){el=document.createElement('datalist');el.id=id;document.body.appendChild(el)}el.innerHTML=values.map(x=>'<option value="'+esc(x)+'"></option>').join('');};
  ensureList('roflaItemChoices',allItems);
