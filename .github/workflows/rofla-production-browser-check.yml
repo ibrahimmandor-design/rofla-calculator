@@ -32,9 +32,10 @@ jobs:
           node --input-type=module <<'EOF'
           import { readFileSync, writeFileSync } from 'node:fs';
           const html = readFileSync('management/index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
-          if (!scripts.length) throw new Error('Inline application script not found');
-          writeFileSync('/tmp/rofla-inline.js', scripts.at(-1)[1]);
+          const start = html.indexOf('<script>');
+          const end = html.lastIndexOf('</script>');
+          if (start < 0 || end <= start) throw new Error('Inline application script not found');
+          writeFileSync('/tmp/rofla-inline.js', html.slice(start + 8, end));
           EOF
           node --check /tmp/rofla-inline.js
       - name: Verify live production app on desktop and iPhone
