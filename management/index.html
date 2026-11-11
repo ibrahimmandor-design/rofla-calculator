@@ -308,10 +308,15 @@ function setupChoiceLists(){
  ensureList('roflaItemChoices',allItems);
  ensureList('roflaRawChoices',rawItems);
  ensureList('roflaReadyChoices',readyItems);
- let suppliers=document.getElementById('roflaSupplierChoices');if(!suppliers){suppliers=document.createElement('datalist');suppliers.id='roflaSupplierChoices';document.body.appendChild(suppliers)}suppliers.innerHTML=[...new Set([...db.purchases.map(x=>x.supplier).filter(Boolean),...db.supplierPrices.map(x=>x.supplier).filter(Boolean)])].map(x=>'<option value="'+esc(x)+'"></option>').join('');let rivals=document.getElementById('roflaCompetitorChoices');if(!rivals){rivals=document.createElement('datalist');rivals.id='roflaCompetitorChoices';document.body.appendChild(rivals)}
+ const suppliers=[...new Set([...(db.purchases||[]).map(x=>x.supplier),...(db.supplierPrices||[]).map(x=>x.supplier)].filter(Boolean))];
+ const customers=[...new Set([...(db.sales||[]).map(x=>x.customerName),...(db.customers||[]).map(x=>x.name)].filter(Boolean))];
+ ensureList('roflaSupplierChoices',suppliers);
+ ensureList('roflaCustomerChoices',customers);
+ let rivals=document.getElementById('roflaCompetitorChoices');if(!rivals){rivals=document.createElement('datalist');rivals.id='roflaCompetitorChoices';document.body.appendChild(rivals)}
  rivals.innerHTML=[...new Set([...ROFLA_COMPETITORS,...db.market.map(x=>x.name)])].map(x=>'<option value="'+esc(x)+'"></option>').join('');
  ['itemName','competitor','spName'].forEach(id=>{let e=document.getElementById(id);if(e)e.setAttribute('list',id==='competitor'?'roflaCompetitorChoices':'roflaItemChoices')});
- let supplierInput=document.getElementById('spSupplier');if(supplierInput)supplierInput.setAttribute('list','roflaSupplierChoices');
+ ['buySupplier','purchaseInvoiceSupplier','spSupplier','paySupplier'].forEach(id=>{let e=document.getElementById(id);if(e)e.setAttribute('list','roflaSupplierChoices')});
+ ['sellCustomer','invoiceCustomer'].forEach(id=>{let e=document.getElementById(id);if(e)e.setAttribute('list','roflaCustomerChoices')});
  document.querySelectorAll('.rn,.ern').forEach(e=>e.setAttribute('list','roflaRawChoices'));
  document.querySelectorAll('.pi-name').forEach(e=>e.setAttribute('list',e.closest('.purchase-invoice-row')?.querySelector('.pi-kind')?.value==='ready'?'roflaReadyChoices':'roflaRawChoices'));
  const buyName=document.getElementById('buyName');if(buyName)buyName.setAttribute('list',val('buyKind')==='ready'?'roflaReadyChoices':'roflaRawChoices');
@@ -575,15 +580,23 @@ function renderFlowSummary(){
  const keys=Object.keys(db.stock||{});
  const rows=keys.map(key=>{
   const s=db.stock[key],moves=(db.movements||[]).filter(m=>m.stockKey===key);
+  const purchases=(db.purchases||[]).filter(p=>p.name===s.name&&(key.startsWith('خامة:')?p.kind==='raw':key.startsWith('جاهز:')?p.kind==='ready':false));
+  const firstPurchase=purchases.slice().sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+  const productions=(db.productions||[]).filter(p=>p.name===s.name);
+  const sales=(db.sales||[]).filter(x=>x.name===s.name);
+  const returns=(db.returns||[]).filter(x=>x.name===s.name);
   const bought=moves.filter(m=>String(m.kind||'').startsWith('شراء')).reduce((n,m)=>n+Math.max(0,Number(m.qty)||0),0);
   const produced=moves.filter(m=>m.kind==='ناتج صالح للبيع').reduce((n,m)=>n+Math.max(0,Number(m.qty)||0),0);
   const sold=moves.filter(m=>m.kind==='بيع').reduce((n,m)=>n+Math.abs(Math.min(0,Number(m.qty)||0)),0);
   const used=moves.filter(m=>m.kind==='استهلاك إنتاج').reduce((n,m)=>n+Math.abs(Math.min(0,Number(m.qty)||0)),0);
-  const revenue=(db.sales||[]).filter(x=>x.name===s.name).reduce((n,x)=>n+(Number(x.price)||0),0);
+  const batchCount=productions.reduce((n,p)=>n+(Number(p.batches)||1),0);
+  const revenue=sales.reduce((n,x)=>n+(Number(x.price)||0),0)-returns.reduce((n,x)=>n+(Number(x.amount)||0),0);
   const type=key.startsWith('خامة:')?'خامة':key.startsWith('جاهز:')?'صنف مشتَرى جاهز':'صنف مُنتَج';
-  return '<tr><td>'+esc(s.name)+'</td><td>'+type+'</td><td>'+bought.toLocaleString('ar-EG')+'</td><td>'+produced.toLocaleString('ar-EG')+'</td><td>'+sold.toLocaleString('ar-EG')+'</td><td>'+used.toLocaleString('ar-EG')+'</td><td><b>'+Number(s.qty||0).toLocaleString('ar-EG')+' '+esc(s.unit)+'</b></td><td>'+money(revenue)+'</td></tr>';
+  const firstDate=firstPurchase&&firstPurchase.date?new Date(firstPurchase.date).toLocaleDateString('ar-EG'):'—';
+  return '<tr><td>'+esc(s.name)+'</td><td>'+type+'</td><td>'+firstDate+'</td><td>'+purchases.length.toLocaleString('ar-EG')+'</td><td>'+bought.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+productions.length.toLocaleString('ar-EG')+'</td><td>'+batchCount.toLocaleString('ar-EG')+'</td><td>'+produced.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+sales.length.toLocaleString('ar-EG')+'</td><td>'+sold.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td>'+used.toLocaleString('ar-EG')+' '+esc(s.unit)+'</td><td><b>'+Number(s.qty||0).toLocaleString('ar-EG')+' '+esc(s.unit)+'</b></td><td>'+money(revenue)+'</td></tr>';
  });
- setHTML('stockFlowSummary',table(rows,['الصنف / الخامة','النوع','اشترينا','أنتجنا','بعنا','استخدمنا في الإنتاج','المتبقي','قيمة البيع المسجلة']));
+ const headings=['الصنف / الخامة','النوع','أول شراء','مرات الشراء','إجمالي الكمية المشتراة','عدد التشغيلات','مرات الوصفة','إجمالي الإنتاج','مرات البيع','إجمالي المباع','استهلاك الإنتاج','المتبقي الحالي','صافي قيمة البيع بعد المرتجعات'];
+ setHTML('stockFlowSummary','<div style="overflow-x:auto">'+table(rows,headings)+'</div><p class="muted">عدد التشغيلات = مرات تسجيل الإنتاج، ومرات الوصفة = مجموع عدد مرات الوصفة المسجل داخل كل تشغيلة. الكميات من سجل الحركات الفعلي، والبيع محسوب بعد المرتجعات.</p>');
 }
 function renderSetupProgress(){
  const total=db.items.length,made=db.items.filter(x=>x.type==='made'),bought=db.items.filter(x=>x.type==='bought'),recipes=made.filter(x=>Array.isArray(x.recipe)&&x.recipe.length>0).length,stockCount=Object.values(db.stock).filter(x=>Number(x.qty)>0).length,activity=(db.purchases||[]).length+(db.productions||[]).length+(db.sales||[]).length+(db.expenses||[]).length;
