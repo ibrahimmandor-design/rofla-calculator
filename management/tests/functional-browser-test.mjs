@@ -251,6 +251,23 @@ async function runScenario(name, contextOptions) {
     check('home dashboard ' + key, dashboard[key] === dashboardExpected[key], dashboard[key]);
   }
 
+  // Recurring expenses: one accrual per month, payment must not double-count profit.
+  await tab('expense');
+  await fill('recAmount', 1200);
+  await fill('recDueDay', 5);
+  await fill('recStartMonth', new Date().toISOString().slice(0,7));
+  await page.evaluate(() => window.addRecurringExpense());
+  await page.evaluate(() => window.generateExpenseAccruals());
+  await page.evaluate(() => window.generateExpenseAccruals());
+  d = await state();
+  check('recurring expense monthly accrual is idempotent', d.recurringExpenses.length === 1 && d.expenseAccruals.length === 1 && d.expenseAccruals[0].amount === 1200, 'one 1,200 EGP accrual despite generating twice');
+  await page.evaluate(() => { window.prompt = () => 'cash'; window.payExpenseAccrual(db.expenseAccruals[0].id); });
+  d = await state();
+  check('recurring expense payment linked once', d.expenseAccruals[0].status === 'مدفوع' && d.expenses.filter(x => x.accrualId).length === 1, 'payment linked to its accrual');
+  await tab('reports');
+  await page.evaluate(() => { document.getElementById('reportMode').value='month'; document.getElementById('reportDate').value=new Date().toISOString().slice(0,10); window.renderReports(); });
+  check('recurring expense counted once in profit', (await page.locator('#rExpenses').innerText()).includes('١٬٢٠٢') || (await page.locator('#rExpenses').innerText()).includes('1,202'), await page.locator('#rExpenses').innerText());
+
   // Customer credit, collection, daily close and audit trail.
   await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
