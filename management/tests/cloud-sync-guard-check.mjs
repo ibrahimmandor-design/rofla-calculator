@@ -13,6 +13,8 @@ const checks = [
   ['complete purchase-to-sale traceability columns are present', /قيمة المشتريات/.test(html) && /المرتجعات/.test(html) && /صافي المباع/.test(html) && /قيمة المخزون المتبقي/.test(html) && /function renderFlowSummary\(/.test(html)],
   ['supplier and customer inputs support saved choices and free typing', /buySupplier[\s\S]{0,180}اسم المورد/.test(html) && /roflaSupplierChoices/.test(html) && /roflaCustomerChoices/.test(html) && /setAttribute\('list','roflaSupplierChoices'\)/.test(html)],
   ['fixed overhead is separated and allocated to each sold unit', /function getPeriodOverheadSplit\(/.test(html) && /function overheadShareForProduct\(/.test(html) && /المصاريف الثابتة للوحدة/.test(html) && /نصيبه من المصاريف الثابتة/.test(html)],
+  ['custom product category is writable', /id="itemCategoryOther"/.test(html) && /toggleCustomChoice\('itemCategory','itemCategoryOther'\)/.test(html)],
+  ['custom sales channels are writable in quick and invoice sales', /id="sellChannelOther"/.test(html) && /id="invoiceChannelOther"/.test(html) && /channel=val\('sellChannel'\)==='أخرى'/.test(html) && /channel=val\('invoiceChannel'\)==='أخرى'/.test(html)],
   ['custom expense names can be entered for one-off and recurring costs', /id="expCustomType"/.test(html) && /id="recCustomType"/.test(html) && /function toggleCustomExpenseType\(/.test(html)],
   ['baking pan unit is available across unit selectors', (html.match(/<option>صاج<\/option>/g)||[]).length >= 5],
   ['live setup progress overview is present', /id="setupProgress"/.test(html) && /function renderSetupProgress\(/.test(html) && /renderSetupProgress\(\)/.test(html)],
