@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const html = readFileSync('management/index.html', 'utf8');
+const priceFnMatch = html.match(/function renderSuggestedPrice\(\)\{([\s\S]*?)\n\}/);
 const checks = [
   ['session load deduplication state', /activeCloudUserId=null,cloudLoadPromise=null/.test(html)],
   ['same-user concurrent auth event guard', /if\(activeCloudUserId===userId\)[\s\S]{0,180}if\(cloudLoadPromise\)/.test(html)],
@@ -24,7 +25,6 @@ const checks = [
 ];
 for (const [name, ok] of checks) { assert.ok(ok, 'FAIL '+name); console.log('PASS '+name); }
 console.log('CLOUD SYNC GUARD RESULT: PASS ('+checks.length+' checks)');
-const priceFnMatch=html.match(/function renderSuggestedPrice\\(\\)\\{([\\s\\S]*?)\\n\\}/);
 assert.ok(priceFnMatch,'FAIL suggested price function can be extracted');
 const priceHost={textContent:'',innerHTML:''};
 const priceDB={items:[{id:'item-1',name:'اختبار',type:'bought'}],stock:{'جاهز:اختبار':{costPer:10}}};
@@ -32,10 +32,10 @@ const priceValues={priceItem:'item-1',targetMargin:'25'};
 new Function('db','val','document','money',priceFnMatch[0])(
  priceDB,key=>priceValues[key]||'',{getElementById:id=>id==='priceSuggestion'?priceHost:null},n=>Number(n).toFixed(2)+' ج'
 );
-assert.match(priceHost.innerHTML,/سعر البيع المقترح:[\\s\\S]*13\\.33/,'FAIL 25% margin calculation');
+assert.match(priceHost.innerHTML,/سعر البيع المقترح:[\s\S]*13\.33/,'FAIL 25% margin calculation');
 console.log('PASS suggested price calculation: cost 10, margin 25%, price 13.33');
-const toggleMatch=html.match(/function toggleRecipeEditor\\(type\\)\\{[^}]+\\}/);
-assert.ok(toggleMatch && /onchange="toggleRecipeEditor\\(this.value\\)"/.test(html),'FAIL recipe editor visibility handler');
+const toggleMatch=html.match(/function toggleRecipeEditor\(type\)\{[^}]+\}/);
+assert.ok(toggleMatch && /onchange="toggleRecipeEditor\(this.value\)"/.test(html),'FAIL recipe editor visibility handler');
 let visibilityArgs=null;
 new Function('type','document',toggleMatch[0])('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
 assert.deepEqual(visibilityArgs,['hidden',false],'FAIL made product should show recipe editor');
