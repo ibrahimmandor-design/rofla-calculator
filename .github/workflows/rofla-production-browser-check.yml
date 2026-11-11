@@ -42,7 +42,7 @@ jobs:
         run: |
           url="https://ibrahimmandor-design.github.io/rofla-calculator/management/"
           for attempt in $(seq 1 36); do
-            if curl -fsSL "$url" | grep -q 'ROFLA_BUILD_20261112_COMPLETE_REVIEW_V23'; then
+            if curl -fsSL "$url" | grep -q 'ROFLA_BUILD_20261112_COMPLETE_REVIEW_V24'; then
               echo "The expected build is live."
               exit 0
             fi
