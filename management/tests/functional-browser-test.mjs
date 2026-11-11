@@ -99,7 +99,9 @@ async function runScenario(name, contextOptions) {
   d = await state();
   const starterItem = d.items.find(x => x.name === 'صنف جاهز للتصنيف');
   assert.ok(starterItem, 'ready-bought test item missing');
-  await page.locator('#editItemSelect').selectOption(starterItem.id);
+  await page.locator('#editItemSelect').fill(starterItem.name.slice(0,1));
+  check('item search suggestions by first letter', await page.locator('#roflaExistingItemChoices option').evaluateAll((opts, prefix) => opts.some(o => o.value.startsWith(prefix)), starterItem.name.slice(0,1)), starterItem.name.slice(0,1));
+  await page.locator('#editItemSelect').fill(starterItem.name);
   await page.locator('#editItemType').selectOption('made');
   check('recipe editor opens for made item', await page.locator('#editRecipeEditor').isVisible(), starterItem.name);
   await page.evaluate(() => window.addEditRecipeRow());
@@ -128,7 +130,9 @@ async function runScenario(name, contextOptions) {
   check('item and recipe', !!product && product.recipe.length === 1, 'product and recipe stored');
 
   // Edit the saved recipe through the product editor without changing its values.
-  await page.locator('#editItemSelect').selectOption(product.id);
+  await page.locator('#editItemSelect').fill(product.name.slice(0,1));
+  check('recipe editor search suggestions by first letter', await page.locator('#roflaExistingItemChoices option').evaluateAll((opts, prefix) => opts.some(o => o.value.startsWith(prefix)), product.name.slice(0,1)), product.name.slice(0,1));
+  await page.locator('#editItemSelect').fill(product.name);
   check('product editor loads recipe', await page.locator('.edit-recipe-row').count() === 1, 'existing recipe is editable');
   await page.locator('.edit-recipe-row .erq').fill('0.5');
   await page.evaluate(() => window.saveItemEdits());
