@@ -323,7 +323,7 @@ async function runScenario(name, contextOptions) {
   await fill('closeCashActual', cashAfterCustomer);
   await page.evaluate(() => window.closeBusinessDay());
   d = await state();
-  check('daily close', d.dailyClosings.length === 1 && d.dailyClosings[0].difference === 0, 'daily cash reconciled');
+  check('daily close', d.dailyClosings.length === 1 && d.dailyClosings[0].difference === 0, JSON.stringify({dailyClosings:d.dailyClosings,cashAfterCustomer}));
   check('audit log', d.auditLog.length >= 5, d.auditLog.length + ' change records');
 
   // Verify that changes are written locally while the test session is active,
