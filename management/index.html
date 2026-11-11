@@ -656,7 +656,7 @@ let rows=Object.entries(by).map(([name,x])=>{
 });
 setHTML('productProfit',table(rows,['الصنف','الكمية الصافية المباعة','صافي المبيعات','التكلفة المباشرة','نصيبه من المصاريف الثابتة','المصاريف الثابتة للوحدة','نصيبه من المصاريف الأخرى','إجمالي نصيبه من المصاريف','التكلفة الكاملة','تكلفة الوحدة بعد التوزيع','الربح بعد التوزيع']));
 const unallocatedFixed=Math.max(0,fixedOverhead-allocatedFixed),unallocatedOther=Math.max(0,otherOverhead-allocatedOther);
-set('overheadAllocationNote','المصاريف الثابتة المسجلة: '+money(fixedOverhead)+' — نصيب الأصناف الموزع منها: '+money(allocatedFixed)+' — غير موزع: '+money(unallocatedFixed)+'. المصاريف الأخرى: '+money(otherOverhead)+' — طريقة التوزيع: '+(method==='revenue'?'حسب صافي المبيعات':method==='quantity'?'حسب عدد الوحدات (استخدمها فقط لو الوحدات متقاربة)':'حسب التكلفة المباشرة').'. نصيب الوحدة يوضح حصة كل وحدة مباعة من الإيجار والرواتب والكهرباء والغاز والمياه وباقي الاستحقاقات الثابتة.');
+set('overheadAllocationNote','المصاريف الثابتة المسجلة: '+money(fixedOverhead)+' — نصيب الأصناف الموزع منها: '+money(allocatedFixed)+' — غير موزع: '+money(unallocatedFixed)+'. المصاريف الأخرى: '+money(otherOverhead)+' — طريقة التوزيع: '+(method==='revenue'?'حسب صافي المبيعات':method==='quantity'?'حسب عدد الوحدات (استخدمها فقط لو الوحدات متقاربة)':'حسب التكلفة المباشرة')+'. نصيب الوحدة يوضح حصة كل وحدة مباعة من الإيجار والرواتب والكهرباء والغاز والمياه وباقي الاستحقاقات الثابتة.');
 let ex={};expenses.forEach(x=>ex[x.type]=(ex[x.type]||0)+Number(x.amount||0));accruals.forEach(x=>ex[x.type]=(ex[x.type]||0)+Number(x.amount||0));
 setHTML('expenseBreakdown',table(Object.entries(ex).map(([k,v])=>'<tr><td>'+esc(k)+'</td><td>'+money(v)+'</td></tr>'),['نوع المصروف','الإجمالي']));
 }
