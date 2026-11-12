@@ -10,7 +10,7 @@ const checks = [
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
   ['build marker exists and is versioned', /ROFLA_BUILD_[A-Z0-9_]+/.test(html)],
-  ['all products except ready chocolate are made in-house', /function roflaSupplyType\(category,name='?'?\)\{return category==='مكسرات وشوكولاتة'&&\/شوكولاتة\/.test\(String\(name\)\)\?'bought':'made'\}/.test(html)],
+  ['all products except ready chocolate boxes or pieces are made in-house', html.includes("function roflaSupplyType(category,name=''){return category==='مكسرات وشوكولاتة'&&/^(?:شوكولاتة|علبة شوكولاتة|بوكس شوكولاتة)/.test(String(name).trim())?'bought':'made'}")],
   ['competitor price entries carry an explicit category', /const marketCategory=x=>/.test(html) && /id="marketCategory"/.test(html) && /esc\(m\.category\|\|'—'\)/.test(html)],
   ['competitor benchmark set is expanded for Eastern, Western and bakery products', /ROFLA_COMPETITOR_PRICE_REFERENCE=\[/.test(html) && html.includes('تسيباس – مصر الجديدة') && html.includes('La Poire – القائمة الرسمية') && html.includes('VENUS Bakery & Cafe – هليوبوليس')],
   ['multi-line purchase invoice supports raw materials, operating supplies and ready goods', /function addPurchaseInvoiceRow\(\)/.test(html) && /function updatePurchaseInvoiceTotal\(\)/.test(html) && /function savePurchaseInvoice\(\)/.test(html) && /className='purchase-invoice-row grid card'/.test(html) && /moveStock\(line\.name/.test(html) && /cashMove\('out',paidNow/.test(html)],
