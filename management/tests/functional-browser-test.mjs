@@ -48,7 +48,7 @@ async function runScenario(name, contextOptions) {
     visibleAdminTabs: [...document.querySelectorAll('#mainNavigation .admin-tab')].filter(b => getComputedStyle(b).display !== 'none').length,
     hintVisible: getComputedStyle(document.getElementById('modeHint')).display !== 'none'
   }));
-  check('admin tools expand on demand', adminView.enabled && adminView.visibleAdminTabs === 6 && adminView.hintVisible, JSON.stringify(adminView));
+  check('admin tools expand on demand', adminView.enabled && adminView.visibleAdminTabs === 7 && adminView.hintVisible, JSON.stringify(adminView));
   await page.locator('#mainNavigation .admin-tab[data-tab="reports"]').click();
   await page.locator('#adminModeToggle').click();
   const returnedView = await page.evaluate(() => ({
