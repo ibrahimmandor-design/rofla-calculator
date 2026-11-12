@@ -60,13 +60,14 @@ async function runScenario(name, contextOptions) {
   check('return to daily view safely', returnedView.operatorMode && returnedView.adminHidden && returnedView.homeActive && returnedView.hintHidden, JSON.stringify(returnedView));
   await page.evaluate(() => { window.ensureStarterCatalog(); window.renderAll(); });
   const initialCatalog = await page.evaluate(() => JSON.parse(JSON.stringify(db)));
-  check('starter catalog follows the Eastern and bakery manufacturing rule',
+  check('starter catalog follows the chocolate-only ready purchase rule',
     initialCatalog.items.length === 336 &&
-    initialCatalog.items.filter(x => x.type === 'made').length === 215 &&
-    initialCatalog.items.filter(x => x.type === 'bought').length === 121 &&
-    initialCatalog.items.filter(x => ['شرقي','مخبوزات'].includes(x.category)).every(x => x.type === 'made') &&
-    initialCatalog.items.filter(x => ['غربي','مكسرات وشوكولاتة','مشروبات'].includes(x.category)).every(x => x.type === 'bought'),
-    initialCatalog.items.length + ' catalog items; 215 made in-house; 121 bought ready-made');
+    initialCatalog.items.filter(x => x.type === 'made').length === 323 &&
+    initialCatalog.items.filter(x => x.type === 'bought').length === 13 &&
+    initialCatalog.items.filter(x => ['شرقي','غربي','مخبوزات','مشروبات'].includes(x.category)).every(x => x.type === 'made') &&
+    initialCatalog.items.filter(x => x.category === 'مكسرات وشوكولاتة' && /شوكولاتة/.test(x.name)).every(x => x.type === 'bought') &&
+    initialCatalog.items.filter(x => x.category === 'مكسرات وشوكولاتة' && !/شوكولاتة/.test(x.name)).every(x => x.type === 'made'),
+    initialCatalog.items.length + ' catalog items; 323 made in-house; 13 ready chocolate products');
   const initialFlow = await page.locator('#stockFlowSummary').innerText();
   const flowRows = await page.locator('#stockFlowSummary tbody tr').count();
   check('lifecycle ledger lists products and raw materials before first purchase',
@@ -75,6 +76,34 @@ async function runScenario(name, contextOptions) {
   const fill = async (id, value) => page.locator('#' + id).fill(String(value));
   const tab = async (id) => page.evaluate(id => window.showTab(id), id);
   const state = () => page.evaluate(() => JSON.parse(JSON.stringify(db)));
+
+  // Wholesale prospect pipeline is part of the same cloud-backed store data.
+  await tab('leads');
+  let leadState = await state();
+  check('wholesale prospects are seeded as prospects, not customers',
+    leadState.wholesaleLeads.length >= 20 && leadState.wholesaleLeads.every(x => x.status === 'مرشح جديد'),
+    leadState.wholesaleLeads.length + ' candidate accounts seeded with prospect status');
+  await fill('leadName', 'عميل اختبار CRM');
+  await page.locator('#leadType').selectOption('market');
+  await fill('leadAddress', 'عنوان اختبار');
+  await fill('leadPhone', '01000000000');
+  await fill('leadProducts', 'شرقي وغربي ومخبوزات');
+  await fill('leadNote', 'اختبار سجل المتابعة');
+  await page.evaluate(() => window.addWholesaleLead());
+  leadState = await state();
+  const crmLead = leadState.wholesaleLeads.find(x => x.name === 'عميل اختبار CRM');
+  check('add a wholesale prospect', !!crmLead && crmLead.kind === 'market' && crmLead.status === 'مرشح جديد', 'new lead saved to shared app data');
+  await page.locator('#wlStatus_' + crmLead.id).selectOption('تم التواصل');
+  await fill('wlContact_' + crmLead.id, 'مسؤول المشتريات');
+  await fill('wlDate_' + crmLead.id, '2026-11-15');
+  await fill('wlProducts_' + crmLead.id, 'شرقي وغربي ومخبوزات');
+  await fill('wlNotes_' + crmLead.id, 'طلب قائمة عينات');
+  await page.evaluate(id => window.saveWholesaleLeadRow(id), crmLead.id);
+  leadState = await state();
+  const savedCrmLead = leadState.wholesaleLeads.find(x => x.id === crmLead.id);
+  check('save contact status and next follow-up', savedCrmLead.status === 'تم التواصل' && savedCrmLead.contactPerson === 'مسؤول المشتريات' && savedCrmLead.followUpDate === '2026-11-15' && savedCrmLead.notes === 'طلب قائمة عينات',
+    'contact owner, follow-up date and notes are persisted');
+
 
   // Cash opening balance and a real multi-line-capable purchase invoice form.
   await tab('cash');
@@ -87,10 +116,11 @@ async function runScenario(name, contextOptions) {
     supplies: [...document.querySelectorAll('#roflaSupplyChoices option')].map(x=>x.value)
   }));
   check('choice-first ingredient catalog', ['دقيق','سمن','سمن بلدي','سميد ناعم','زبدة','سكر','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
-  check('ready sweets catalog follows purchased-only categories',
-    ['جاتوه شوكولاتة','تورتة شوكولاتة','شوكولاتة سادة'].every(x=>choiceLists.ready.includes(x)) &&
-    !choiceLists.ready.includes('بسبوسة سادة') && !choiceLists.ready.includes('باتيه جبنة'),
-    'Western and chocolate are ready-bought; Eastern and bakery stay in-house');
+  check('ready purchase list contains chocolate only',
+    ['شوكولاتة سادة','علبة شوكولاتة','بوكس شوكولاتة مشكل'].every(x=>choiceLists.ready.includes(x)) &&
+    !choiceLists.ready.includes('بسبوسة سادة') && !choiceLists.ready.includes('باتيه جبنة') &&
+    !choiceLists.ready.includes('جاتوه شوكولاتة') && !choiceLists.ready.includes('مكسرات مشكلة'),
+    'Eastern, Western, bakery and non-chocolate products are manufactured in-house');
   check('operating supplies are separated from food ingredients',
     ['غاز تشغيل','قفازات','منظفات','مطهرات'].every(x=>choiceLists.supplies.includes(x)) && choiceLists.raw.includes('أكياس'),
     'packaging stays available for recipe costing; cleaning and safety supplies are separate');
@@ -141,7 +171,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#editItemCategory').selectOption('غربي');
   await page.evaluate(() => window.saveItemEdits());
   d = await state();
-  check('starter item can return to bought', d.items.find(x => x.id === starterItem.id)?.type === 'bought' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 0, starterItem.name);
+  check('Western category remains made in-house', d.items.find(x => x.id === starterItem.id)?.type === 'made' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 1, starterItem.name);
 
   // Create product and recipe through the actual item form.
   await fill('itemName', 'بسبوسة اختبار');
