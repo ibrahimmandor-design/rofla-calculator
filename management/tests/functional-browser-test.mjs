@@ -109,7 +109,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#buyUnit').fill('كيلو');
   await fill('buyCost', 40);
   await fill('buySupplier', 'مورد اختبار');
-  await page.locator('#buyPayMethod').selectOption('bank');
+  await page.locator('#buyPayMethod').selectOption('cash');
   await fill('buyPaid', 40);
   await page.evaluate(() => window.addPurchase());
   let d = await state();
