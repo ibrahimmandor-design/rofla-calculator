@@ -422,11 +422,11 @@ async function runScenario(name, contextOptions) {
   await fill('buySupplier', 'مورد تغليف');
   await page.locator('#buyPayMethod').selectOption('bank');
   await fill('buyPaid', 20);
-  await fill('buyLow', 12);
+  await page.evaluate(() => { const e=document.getElementById('buyLow'); e.value='12'; e.dispatchEvent(new Event('input',{bubbles:true})); });
   await page.evaluate(() => window.addPurchase());
   d = await state();
   check('operating supplies purchase updates separate stock balance',
-    d.stock['مستلزم:أكياس اختبار']?.qty === 10 && d.stock['مستلزم:أكياس اختبار']?.kind === 'supplies',
+    d.stock['مستلزم:أكياس اختبار']?.qty === 10 && d.stock['مستلزم:أكياس اختبار']?.kind === 'supplies' && d.stock['مستلزم:أكياس اختبار']?.lowStock === 12,
     '10 packaging units recorded as operating supplies');
   const supplyFlow = await page.locator('#stockFlowSummary').innerText();
   check('operating supplies ledger shows supplier and purchase value',
