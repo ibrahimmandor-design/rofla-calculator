@@ -44,3 +44,10 @@
 ## V52 — 12 November 2026
 
 Expanded the ready-to-sell and in-house catalogs: +29 Eastern sweets, +68 bakery items made in-house, and +20 Western ready-made items. ROFLA continues to manufacture Eastern sweets and bakery products only; Western cakes/gateaux and chocolate remain purchased ready-made. Competitor references expanded from 100 to 138, with explicit category labels and published sizes/source links. No recipes, ingredient quantities, shop prices, or actual transactions were fabricated.
+
+
+## V53/V54 — 12 November 2026
+- Expanded raw material choice suggestions to 168 items for Eastern sweets and bakery fillings, dairy, cheeses, meats, oils, herbs and spices.
+- Restored the multi-line purchase invoice workflow with separate raw/supplies/ready classifications, line-level quantities/units/costs, proportional payments, supplier balances, weighted-average stock cost and stock movements.
+- Added invoice-level expiry dates for raw-material batches and optional reorder thresholds per line.
+- V54 build marker: ROFLA_BUILD_20261112_EASTERN_BAKERY_ONLY_MARKET_V54.
