@@ -55,3 +55,8 @@ Expanded the ready-to-sell and in-house catalogs: +29 Eastern sweets, +68 bakery
 
 ## V55 — 12 November 2026
 - Quick purchase now persists the entered reorder threshold to the stock record and uses it for low-stock alerts.
+
+
+## V56 — 12 November 2026
+- Applied explicit category labels to all 138 competitor price references (58 Eastern, 27 Western, 53 bakery).
+- Made the quick-purchase reorder threshold visible in the operator purchase form and saved it to the stock record.
