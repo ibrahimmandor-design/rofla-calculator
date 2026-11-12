@@ -11,14 +11,18 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: rofla-production-browser-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   production-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -43,12 +47,12 @@ jobs:
           url="https://ibrahimmandor-design.github.io/rofla-calculator/management/"
           expected_marker=$(grep -o 'ROFLA_BUILD_[A-Z0-9_]*' management/index.html | head -1)
           if [ -z "$expected_marker" ]; then echo "Build marker missing from source."; exit 1; fi
-          for attempt in $(seq 1 36); do
-            if curl -fsSL "$url" | grep -Fq "$expected_marker"; then
+          for attempt in $(seq 1 72); do
+            if curl -fsSL "$url" -o /tmp/rofla-live.html && grep -Fq "$expected_marker" /tmp/rofla-live.html; then
               echo "The expected build is live: $expected_marker"
               exit 0
             fi
-            echo "Waiting for GitHub Pages deployment ($attempt/36)..."
+            echo "Waiting for GitHub Pages deployment ($attempt/72)..."
             sleep 10
           done
           echo "Timed out waiting for the expected production build."
