@@ -422,7 +422,7 @@ async function runScenario(name, contextOptions) {
   await fill('buySupplier', 'مورد تغليف');
   await page.locator('#buyPayMethod').selectOption('bank');
   await fill('buyPaid', 20);
-  await page.evaluate(() => { const e=document.getElementById('buyLow'); e.value='12'; e.dispatchEvent(new Event('input',{bubbles:true})); });
+  await fill('buyLow', 12);
   await page.evaluate(() => window.addPurchase());
   d = await state();
   check('operating supplies purchase updates separate stock balance',
