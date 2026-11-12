@@ -25,7 +25,7 @@ const checks = [
   ['custom product category is writable', /id="itemCategoryOther"/.test(html) && /toggleCustomChoice\('itemCategory','itemCategoryOther'\)/.test(html)],
   ['custom sales channels are writable in quick and invoice sales', /id="sellChannelOther"/.test(html) && /id="invoiceChannelOther"/.test(html) && /channel=val\('sellChannel'\)==='أخرى'/.test(html) && /channel=val\('invoiceChannel'\)==='أخرى'/.test(html)],
   ['custom expense names can be entered for one-off and recurring costs', /id="expCustomType"/.test(html) && /id="recCustomType"/.test(html) && /function toggleCustomExpenseType\(/.test(html)],
-  ['baking pan unit is available across unit selectors', (html.match(/<option>صاج<\/option>/g)||[]).length >= 5],
+  ['baking pan unit is available across unit selectors', html.includes("'صاج'") && /id="buyUnit"[^>]*list="roflaUnitChoices"/.test(html) && /id="sellUnit"[^>]*list="roflaUnitChoices"/.test(html)],
   ['live setup progress overview is present', /id="setupProgress"/.test(html) && /function renderSetupProgress\(/.test(html) && /renderSetupProgress\(\)/.test(html)],
   ['setup overview reads real catalog, recipe, stock and activity counts', /const total=db\.items\.length/.test(html) && /recipes=made\.filter/.test(html) && /stockCount=Object\.values\(db\.stock\)/.test(html) && /activity=\(db\.purchases/.test(html)],
   ['cloud refresh tracks pending writes', /cloudWritesPending=0/.test(html) && /cloudWritesPending>0/.test(html)],
