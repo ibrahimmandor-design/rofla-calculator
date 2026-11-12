@@ -54,7 +54,7 @@ new Function('db','val','document','money','esc','overheadPerUnitBreakdown',pric
 assert.ok(priceHost.innerHTML.includes('13.33 ج'),'FAIL 25% margin calculation: '+priceHost.innerHTML);
 console.log('PASS suggested price calculation: cost 10, margin 25%, price 13.33');
 const toggleMatch=html.match(/function toggleRecipeEditor\(type\)\{[^}]+\}/);
-assert.ok(toggleMatch && /onchange="toggleRecipeEditor\(this.value\)"/.test(html),'FAIL recipe editor visibility handler');
+assert.ok(toggleMatch && /function syncEditItemTypeByCategory\(\)/.test(html) && /onchange="syncEditItemTypeByCategory\(\)"/.test(html),'FAIL recipe editor visibility handler');
 let visibilityArgs=null;
 new Function('type','document',toggleMatch[0]+';toggleRecipeEditor(type);')('made',{getElementById:()=>({classList:{toggle:(...args)=>{visibilityArgs=args}}})});
 assert.deepEqual(visibilityArgs,['hidden',false],'FAIL made product should show recipe editor');
