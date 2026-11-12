@@ -11,7 +11,7 @@ const checks = [
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
   ['build marker exists and is versioned', /ROFLA_BUILD_[A-Z0-9_]+/.test(html)],
   ['Eastern sweets and bakery are the only in-house manufacturing categories', /function roflaSupplyType\(category\)\{return \['شرقي','مخبوزات'\]\.includes\(category\)\?'made':'bought'\}/.test(html)],
-  ['competitor price entries carry an explicit category', /function marketCategory\(x\)/.test(html) && /id="marketCategory"/.test(html) && /esc\(m\.category\|\|'—'\)/.test(html)],
+  ['competitor price entries carry an explicit category', /const marketCategory=x=>/.test(html) && /id="marketCategory"/.test(html) && /esc\(m\.category\|\|'—'\)/.test(html)],
   ['competitor benchmark set is expanded for Eastern, Western and bakery products', /ROFLA_COMPETITOR_PRICE_REFERENCE=\[/.test(html) && html.includes('تسيباس – مصر الجديدة') && html.includes('La Poire – القائمة الرسمية') && html.includes('VENUS Bakery & Cafe – هليوبوليس')],
   ['purchase invoice rows switch to the separate operating supplies list', /function setPurchaseRowChoiceList\(select\)[\s\S]*?select\.value==='supplies'\?'roflaSupplyChoices'/.test(html)],
   ['operating supplies are a separate purchase and stock type', /ROFLA_OPERATING_SUPPLIES=\[/.test(html) && /value="supplies">مستلزمات تشغيل/.test(html) && /مستلزم:/.test(html) && /roflaSupplyChoices/.test(html)],
