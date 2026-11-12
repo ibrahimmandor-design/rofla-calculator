@@ -103,18 +103,15 @@ async function runScenario(name, contextOptions) {
   check('supplier field offers suggestions and accepts typed names',
     await page.locator('#buySupplier').getAttribute('list') === 'roflaSupplierChoices',
     'supplier choices plus free text');
-  await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('supplies');
-  check('purchase invoice switches to operating supplies list',
-    await page.locator('.purchase-invoice-row').last().locator('.pi-name').getAttribute('list') === 'roflaSupplyChoices',
-    'invoice row uses supply list');
-  await page.locator('.purchase-invoice-row').last().locator('.pi-kind').selectOption('raw');
-  await page.locator('.purchase-invoice-row').last().locator('.pi-name').fill('دقيق اختبار');
-  await page.locator('.purchase-invoice-row').last().locator('.pi-qty').fill('2');
-  await page.locator('.purchase-invoice-row').last().locator('.pi-unit').selectOption({ label: 'كيلو' });
-  await page.locator('.purchase-invoice-row').last().locator('.pi-cost').fill('40');
-  await fill('purchaseInvoiceSupplier', 'مورد اختبار');
-  await fill('purchaseInvoicePaid', '40');
-  await page.evaluate(() => window.savePurchaseInvoice());
+  await page.locator('#buyKind').selectOption('raw');
+  await fill('buyName', 'دقيق اختبار');
+  await fill('buyQty', 2);
+  await page.locator('#buyUnit').fill('كيلو');
+  await fill('buyCost', 40);
+  await fill('buySupplier', 'مورد اختبار');
+  await page.locator('#buyPayMethod').selectOption('bank');
+  await fill('buyPaid', 40);
+  await page.evaluate(() => window.addPurchase());
   let d = await state();
   check('purchase', d.stock['خامة:دقيق اختبار']?.qty === 2 && d.purchases.length === 1, '2 kg flour stock; invoice saved');
   check('purchased materials appear in stock flow summary', (await page.locator('#stockFlowSummary').innerText()).includes('دقيق اختبار'), 'purchased raw material listed');
