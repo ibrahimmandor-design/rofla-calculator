@@ -51,3 +51,7 @@ Expanded the ready-to-sell and in-house catalogs: +29 Eastern sweets, +68 bakery
 - Restored the multi-line purchase invoice workflow with separate raw/supplies/ready classifications, line-level quantities/units/costs, proportional payments, supplier balances, weighted-average stock cost and stock movements.
 - Added invoice-level expiry dates for raw-material batches and optional reorder thresholds per line.
 - V54 build marker: ROFLA_BUILD_20261112_EASTERN_BAKERY_ONLY_MARKET_V54.
+
+
+## V55 — 12 November 2026
+- Quick purchase now persists the entered reorder threshold to the stock record and uses it for low-stock alerts.
