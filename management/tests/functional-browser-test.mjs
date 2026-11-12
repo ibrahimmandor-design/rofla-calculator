@@ -60,9 +60,13 @@ async function runScenario(name, contextOptions) {
   check('return to daily view safely', returnedView.operatorMode && returnedView.adminHidden && returnedView.homeActive && returnedView.hintHidden, JSON.stringify(returnedView));
   await page.evaluate(() => { window.ensureStarterCatalog(); window.renderAll(); });
   const initialCatalog = await page.evaluate(() => JSON.parse(JSON.stringify(db)));
-  check('all starter sweets catalog items are marked for in-house production',
-    initialCatalog.items.length === 126 && initialCatalog.items.every(x => x.type === 'made'),
-    initialCatalog.items.length + ' catalog items; ' + initialCatalog.items.filter(x => x.type === 'made').length + ' marked made');
+  check('starter catalog follows the Eastern and bakery manufacturing rule',
+    initialCatalog.items.length === 336 &&
+    initialCatalog.items.filter(x => x.type === 'made').length === 215 &&
+    initialCatalog.items.filter(x => x.type === 'bought').length === 121 &&
+    initialCatalog.items.filter(x => ['شرقي','مخبوزات'].includes(x.category)).every(x => x.type === 'made') &&
+    initialCatalog.items.filter(x => ['غربي','مكسرات وشوكولاتة','مشروبات'].includes(x.category)).every(x => x.type === 'bought'),
+    initialCatalog.items.length + ' catalog items; 215 made in-house; 121 bought ready-made');
   const initialFlow = await page.locator('#stockFlowSummary').innerText();
   const flowRows = await page.locator('#stockFlowSummary tbody tr').count();
   check('lifecycle ledger lists products and raw materials before first purchase',
@@ -83,7 +87,10 @@ async function runScenario(name, contextOptions) {
     supplies: [...document.querySelectorAll('#roflaSupplyChoices option')].map(x=>x.value)
   }));
   check('choice-first ingredient catalog', ['دقيق','سمن','سمن بلدي','سميد ناعم','زبدة','سكر','سكر أبيض'].every(x=>choiceLists.raw.includes(x)), 'common bakery ingredients are selectable');
-  check('ready sweets catalog', ['بسبوسة سادة','جاتوه شوكولاتة','باتيه جبنة'].every(x=>choiceLists.ready.includes(x)), 'eastern, western and bakery products are selectable');
+  check('ready sweets catalog follows purchased-only categories',
+    ['جاتوه شوكولاتة','تورتة شوكولاتة','شوكولاتة سادة'].every(x=>choiceLists.ready.includes(x)) &&
+    !choiceLists.ready.includes('بسبوسة سادة') && !choiceLists.ready.includes('باتيه جبنة'),
+    'Western and chocolate are ready-bought; Eastern and bakery stay in-house');
   check('operating supplies are separated from food ingredients',
     ['غاز تشغيل','قفازات','منظفات','مطهرات'].every(x=>choiceLists.supplies.includes(x)) && choiceLists.raw.includes('أكياس'),
     'packaging stays available for recipe costing; cleaning and safety supplies are separate');
@@ -116,8 +123,8 @@ async function runScenario(name, contextOptions) {
   // Verify that a ready-bought item can be switched to in-house production and back.
   await tab('items');
   await fill('itemName', 'صنف جاهز للتصنيف');
-  await page.locator('#itemType').selectOption('bought');
-  await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
+  await page.locator('#itemCategory').selectOption('غربي');
+  await fill('itemUnit', 'قطعة');
   await page.evaluate(() => window.addItem());
   d = await state();
   const starterItem = d.items.find(x => x.name === 'صنف جاهز للتصنيف');
@@ -125,28 +132,28 @@ async function runScenario(name, contextOptions) {
   await page.locator('#editItemSelect').fill(starterItem.name.slice(0,1));
   check('item search suggestions by first letter', await page.locator('#roflaExistingItemChoices option').evaluateAll((opts, prefix) => opts.some(o => o.value.startsWith(prefix)), starterItem.name.slice(0,1)), starterItem.name.slice(0,1));
   await page.locator('#editItemSelect').fill(starterItem.name);
-  await page.locator('#editItemType').selectOption('made');
+  await page.locator('#editItemCategory').selectOption('شرقي');
   check('recipe editor opens for made item', await page.locator('#editRecipeEditor').isVisible(), starterItem.name);
   await page.evaluate(() => window.addEditRecipeRow());
   await page.locator('.edit-recipe-row .ern').last().fill('دقيق اختبار');
   await page.locator('.edit-recipe-row .erq').last().fill('0.1');
-  await page.locator('.edit-recipe-row .eru').last().selectOption({ label: 'كيلو' });
+  await page.locator('.edit-recipe-row .eru').last().fill('كيلو');
   await page.evaluate(() => window.saveItemEdits());
   d = await state();
   check('starter item switched to made', d.items.find(x => x.id === starterItem.id)?.type === 'made' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 1, starterItem.name);
-  await page.locator('#editItemType').selectOption('bought');
+  await page.locator('#editItemCategory').selectOption('غربي');
   await page.evaluate(() => window.saveItemEdits());
   d = await state();
   check('starter item can return to bought', d.items.find(x => x.id === starterItem.id)?.type === 'bought' && d.items.find(x => x.id === starterItem.id)?.recipe.length === 0, starterItem.name);
 
   // Create product and recipe through the actual item form.
   await fill('itemName', 'بسبوسة اختبار');
-  await page.locator('#itemType').selectOption('made');
-  await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
+  await page.locator('#itemCategory').selectOption('شرقي');
+  await fill('itemUnit', 'قطعة');
   await page.evaluate(() => window.addRecipeRow());
   await page.locator('.recipe-row .rn').last().fill('دقيق اختبار');
   await page.locator('.recipe-row .rq').last().fill('0.5');
-  await page.locator('.recipe-row .ru').last().selectOption({ label: 'كيلو' });
+  await page.locator('.recipe-row .ru').last().fill('كيلو');
   await page.evaluate(() => window.addItem());
   d = await state();
   const product = d.items.find(x => x.name === 'بسبوسة اختبار');
@@ -196,12 +203,12 @@ async function runScenario(name, contextOptions) {
   // Reuse the leftovers as a recipe ingredient in a second product.
   await tab('items');
   await fill('itemName', 'كنافة اختبار');
-  await page.locator('#itemType').selectOption('made');
-  await page.locator('#itemUnit').selectOption({ label: 'قطعة' });
+  await page.locator('#itemCategory').selectOption('شرقي');
+  await fill('itemUnit', 'قطعة');
   await page.evaluate(() => addRecipeRow());
   await page.locator('.recipe-row .rn').last().fill('بواقي: بسبوسة اختبار');
   await page.locator('.recipe-row .rq').last().fill('2');
-  await page.locator('.recipe-row .ru').last().selectOption({ label: 'قطعة' });
+  await page.locator('.recipe-row .ru').last().fill('قطعة');
   await page.evaluate(() => addItem());
   d = await state();
   const secondProduct = d.items.find(x => x.name === 'كنافة اختبار');
@@ -218,7 +225,7 @@ async function runScenario(name, contextOptions) {
   // Sale, return and expense through the actual entry functions.
   await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
-  await page.locator('#sellUnit').selectOption({ label: 'قطعة' });
+  await fill('sellUnit', 'قطعة');
   await fill('sellQty', 3);
   await fill('sellPrice', 15);
   await page.locator('#sellPayMethod').selectOption('cash');
@@ -411,7 +418,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#buyKind').selectOption('supplies');
   await fill('buyName', 'أكياس اختبار');
   await fill('buyQty', 10);
-  await page.locator('#buyUnit').selectOption({ label: 'قطعة' });
+  await fill('buyUnit', 'قطعة');
   await fill('buyCost', 20);
   await fill('buySupplier', 'مورد تغليف');
   await page.locator('#buyPayMethod').selectOption('bank');
