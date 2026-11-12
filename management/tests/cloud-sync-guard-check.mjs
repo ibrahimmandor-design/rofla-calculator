@@ -40,7 +40,7 @@ const checks = [
   ['suggested price never saves or changes sale price', !!priceFnMatch && !priceFnMatch[0].includes('save(')],
   ['existing product editor is present', /id="editItemSelect"/.test(html) && /id="editRecipeRows"/.test(html)],
   ['recipe editor supports add, edit and save', /function addEditRecipeRow\(/.test(html) && /function loadItemEditor\(/.test(html) && /function saveItemEdits\(/.test(html)],
-  ['searchable product editor loads selected product fields', /id="roflaExistingItemChoices"/.test(html) && /document\.getElementById\('editItemType'\)\.value=roflaSupplyType\(item\.category\)/.test(html) && /document\.getElementById\('editItemCategory'\)\.value/.test(html)],
+  ['searchable product editor loads selected product fields', /id="roflaExistingItemChoices"/.test(html) && /document\.getElementById\('editItemType'\)\.value=roflaSupplyType\(item\.category,item\.name\)/.test(html) && /document\.getElementById\('editItemCategory'\)\.value/.test(html)],
   ['product type and unit changes are blocked after transactions', /if\(\(type!==item\.type\|\|unit!==item\.unit\)&&\(hasHistory\|\|hasStock\)\)/.test(html)],
   ['manufactured product requires recipe ingredients', /if\(!recipe\.length\)return alert\('أضف خامة واحدة على الأقل لو الصنف بيتصنع في المحل'\)/.test(html)]
 ];
