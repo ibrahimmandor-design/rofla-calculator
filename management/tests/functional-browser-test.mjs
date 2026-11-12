@@ -125,6 +125,15 @@ async function runScenario(name, contextOptions) {
     ['غاز تشغيل','قفازات','منظفات','مطهرات'].every(x=>choiceLists.supplies.includes(x)) && choiceLists.raw.includes('أكياس'),
     'packaging stays available for recipe costing; cleaning and safety supplies are separate');
   await page.locator('#buyKind').selectOption('ready');
+  await fill('buyName', 'جاتوه شوكولاتة');
+  await fill('buyQty', 1);
+  await fill('buyUnit', 'قطعة');
+  await fill('buyCost', 10);
+  await page.evaluate(() => window.addPurchase());
+  d = await state();
+  check('ready purchase blocks Western cake even when chocolate-flavoured',
+    d.purchases.length === 1 && !d.stock['جاهز:جاتوه شوكولاتة'],
+    'only standalone chocolate boxes or pieces can be purchased ready-made');
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
   await page.locator('#buyKind').selectOption('supplies');
   check('quick purchase has a separate operating supplies list', await page.locator('#buyName').getAttribute('list') === 'roflaSupplyChoices', 'operating supplies list');
