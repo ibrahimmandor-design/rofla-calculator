@@ -174,6 +174,13 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.saveProduction());
   d = await state();
   check('production raw deduction', d.stock['خامة:دقيق اختبار']?.qty === 1.5, 'flour balance 1.5 kg');
+  const flourFlowRow = await page.locator('#stockFlowSummary tbody tr').filter({ hasText: 'دقيق اختبار' }).innerText();
+  check('ingredient lifecycle names the products made from purchased flour',
+    flourFlowRow.includes('بسبوسة اختبار') && flourFlowRow.includes('1'),
+    flourFlowRow.replace(/\\s+/g,' ').slice(0,220));
+  check('ingredient lifecycle counts production batches that consumed it',
+    /عدد التشغيلات التي استخدمت الخامة/.test(await page.locator('#stockFlowSummary').innerText()) && flourFlowRow.includes('بسبوسة اختبار'),
+    'ingredient-to-production trace is visible in the purchase lifecycle ledger');
   check('production finished stock', d.stock['منتج:بسبوسة اختبار']?.qty === 7, '7 saleable pieces');
   check('produced goods appear in stock flow summary', (await page.locator('#stockFlowSummary').innerText()).includes('بسبوسة اختبار'), 'produced item listed');
   check('production leftovers and waste', d.stock['خامة:بواقي: بسبوسة اختبار']?.qty === 2 && d.productions[0].wasteCost === 1, '2 leftovers; waste cost 1 EGP');
