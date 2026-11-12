@@ -176,7 +176,7 @@ async function runScenario(name, contextOptions) {
   check('production raw deduction', d.stock['خامة:دقيق اختبار']?.qty === 1.5, 'flour balance 1.5 kg');
   const flourFlowRow = await page.locator('#stockFlowSummary tbody tr').filter({ hasText: 'دقيق اختبار' }).innerText();
   check('ingredient lifecycle names the products made from purchased flour',
-    flourFlowRow.includes('بسبوسة اختبار') && flourFlowRow.includes('1'),
+    flourFlowRow.includes('بسبوسة اختبار') && /[١1]/.test(flourFlowRow),
     flourFlowRow.replace(/\\s+/g,' ').slice(0,220));
   check('ingredient lifecycle counts production batches that consumed it',
     /عدد التشغيلات التي استخدمت الخامة/.test(await page.locator('#stockFlowSummary').innerText()) && flourFlowRow.includes('بسبوسة اختبار'),
