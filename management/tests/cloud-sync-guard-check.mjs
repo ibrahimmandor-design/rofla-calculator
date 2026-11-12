@@ -9,7 +9,7 @@ const checks = [
   ['cloud save returns explicit success', /cloudRevision=Number\(data\);cloudSaveFailed=false;setSyncMessage\('تم حفظ التغييرات سحابيًا — الإصدار '\+cloudRevision\);return true/.test(html)],
   ['cloud conflict blocks further saves', /ROFLA_CONFLICT[\s\S]{0,220}cloudReady=false/.test(html)],
   ['non-owner email is rejected', /toLowerCase\(\)!==ROFLA_EMAIL/.test(html)],
-  ['new cloud sync build marker', /ROFLA_BUILD_20261112_FINAL_HANDOVER_V35/.test(html)],
+  ['new cloud sync build marker', /ROFLA_BUILD_20261112_INGREDIENT_TRACE_V36/.test(html)],
   ['purchase invoice rows switch to the separate operating supplies list', /function setPurchaseRowChoiceList\(select\)[\s\S]*?select\.value==='supplies'\?'roflaSupplyChoices'/.test(html)],
   ['operating supplies are a separate purchase and stock type', /ROFLA_OPERATING_SUPPLIES=\[/.test(html) && /value="supplies">مستلزمات تشغيل/.test(html) && /مستلزم:/.test(html) && /roflaSupplyChoices/.test(html)],
   ['raw ingredients exclude packaging and cleaning supplies', /filter\(x=>!supplySet\.has\(x\)\)/.test(html) && /supplyItems=\[\.\.\.new Set/.test(html)],
