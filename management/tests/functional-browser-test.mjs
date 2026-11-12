@@ -360,7 +360,7 @@ async function runScenario(name, contextOptions) {
   // Customer credit, collection, daily close and audit trail.
   await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
-  await page.locator('#sellUnit').selectOption({ label: 'قطعة' });
+  await fill('sellUnit', 'قطعة');
   await fill('sellQty', 1);
   await fill('sellPrice', 5);
   await fill('sellCustomer', 'عميل اختبار');
@@ -381,7 +381,7 @@ async function runScenario(name, contextOptions) {
   check('credit sale return settlement', d.sales.find(x => x.id === creditSale.id).dueAmount === 0 && d.returns[0].creditAdjusted === 3, '3 EGP receivable cancelled; only 2 EGP refunded in cash');
   await tab('sell');
   await page.locator('#sellItem').selectOption(product.id);
-  await page.locator('#sellUnit').selectOption({ label: 'قطعة' });
+  await fill('sellUnit', 'قطعة');
   await fill('sellQty', 1);
   await fill('sellPrice', 5);
   await fill('sellCustomer', 'عميل سداد');
