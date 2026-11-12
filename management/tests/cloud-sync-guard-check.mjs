@@ -14,6 +14,7 @@ const checks = [
   ['competitor price entries carry an explicit category', /const marketCategory=x=>/.test(html) && /id="marketCategory"/.test(html) && /esc\(m\.category\|\|'—'\)/.test(html)],
   ['competitor benchmark set is expanded for Eastern, Western and bakery products', /ROFLA_COMPETITOR_PRICE_REFERENCE=\[/.test(html) && html.includes('تسيباس – مصر الجديدة') && html.includes('La Poire – القائمة الرسمية') && html.includes('VENUS Bakery & Cafe – هليوبوليس')],
   ['multi-line purchase invoice supports raw materials, operating supplies and ready goods', /function addPurchaseInvoiceRow\(\)/.test(html) && /function updatePurchaseInvoiceTotal\(\)/.test(html) && /function savePurchaseInvoice\(\)/.test(html) && /className='purchase-invoice-row grid card'/.test(html) && /moveStock\(line\.name/.test(html) && /cashMove\('out',paidNow/.test(html)],
+  ['quick purchase applies the entered reorder threshold to stock', /if\(num\('buyLow'\)>0\)stock\.lowStock=num\('buyLow'\)/.test(html)],
   ['purchase invoice rows switch to the separate operating supplies list', /function setPurchaseRowChoiceList\(select\)[\s\S]*?select\.value==='supplies'\?'roflaSupplyChoices'/.test(html)],
   ['operating supplies are a separate purchase and stock type', /ROFLA_OPERATING_SUPPLIES=\[/.test(html) && /value="supplies">مستلزمات تشغيل/.test(html) && /مستلزم:/.test(html) && /roflaSupplyChoices/.test(html)],
   ['raw ingredients exclude packaging and cleaning supplies', /filter\(x=>!supplySet\.has\(x\)\)/.test(html) && /supplyItems=\[\.\.\.new Set/.test(html)],
