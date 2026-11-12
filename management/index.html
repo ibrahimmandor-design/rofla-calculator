@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_EASTERN_BAKERY_ONLY_MARKET_V53 -->
+<meta name="theme-color" content="#74132e"><title>رفلا | إدارة المحل</title><!-- ROFLA_BUILD_20261112_EASTERN_BAKERY_ONLY_MARKET_V54 -->
 <style>
 :root{--wine:#74132e;--cream:#faf7f4;--ink:#30282a;--muted:#756b6e;--line:#eadfe2;--green:#287a50;--gold:#a66c16}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Tahoma,Arial,sans-serif}body.operator-mode .admin-tab{display:none}header{background:var(--wine);color:white;padding:18px 16px 16px}header h1{margin:0;font-size:23px}header p{margin:6px 0 0;font-size:13px;opacity:.88}.wrap{max-width:1050px;margin:auto;padding:14px}.notice{background:#fff4d9;border:1px solid #efd99f;border-radius:12px;padding:11px 13px;font-size:12px;line-height:1.7;margin-bottom:13px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.tab{border:1px solid var(--line);background:white;border-radius:12px;padding:12px 5px;font-size:13px;color:var(--ink);font-weight:bold;cursor:pointer}.tab.active{background:var(--wine);color:white;border-color:var(--wine)}.mode-toggle{grid-column:1/-1;border:1px dashed #b99aa4;background:#fff;border-radius:12px;padding:11px;color:var(--wine);font:inherit;font-weight:bold;cursor:pointer}.admin-tab{display:none}body.admin-mode .admin-tab{display:block}body.admin-mode .mode-toggle{background:#f5edf0}body.admin-mode #modeHint{display:block}.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px}.card h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.metric{background:white;border:1px solid var(--line);border-radius:13px;padding:12px}.metric small{color:var(--muted);display:block;font-size:11px}.metric strong{display:block;font-size:20px;margin-top:6px}.field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;border:1px solid #d9cdd1;border-radius:10px;padding:12px;font:inherit;font-size:14px;background:white;min-height:44px}button.primary{border:0;background:var(--wine);color:white;border-radius:10px;padding:12px 17px;font:inherit;font-weight:bold;cursor:pointer;min-height:44px}button.soft{border:1px solid var(--line);background:white;border-radius:9px;padding:8px 11px;font:inherit;cursor:pointer}button.danger{border:0;background:#fbe9eb;color:#9b2535;border-radius:8px;padding:7px 10px;cursor:pointer}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:right;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:normal;font-size:11px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#f5edf0;color:var(--wine);font-size:11px}.empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}.hidden{display:none!important}.total{font-size:22px;font-weight:bold;color:var(--wine)}footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
@@ -380,6 +380,54 @@ async function addPurchase(){
  if(kind==='ready'){let purchasedItem=db.items.find(x=>x.name===name);if(purchasedItem){purchasedItem.type='bought';if(!purchasedItem.category)purchasedItem.category=/شوكولاتة|تمر محشي|مكسرات/i.test(name)?'مكسرات وشوكولاتة':'غربي';purchasedItem.unit=stockUnit;}else{const category=/شوكولاتة|تمر محشي|مكسرات/i.test(name)?'مكسرات وشوكولاتة':/جاتوه|تورتة|ميلفيه|إكلير|تشيز|براونيز|تارت|ماكرون|كوكيز|دونات|كيك|حلوى/i.test(name)?'غربي':'جاهز من بره';db.items.unshift({id:id(),name,type:'bought',category,unit:stockUnit,recipe:[]});}}moveStock(name,kind==='raw'?'شراء خامة':kind==='supplies'?'شراء مستلزم تشغيل':'شراء صنف جاهز من بره',stockQty,stockUnit,source||'شراء',purchaseId,key);
  clear(['buyName','buyQty','buyCost','buySupplier','buyPaid','buyNote','buyReceiptPhoto']);const receiptName=document.getElementById('buyReceiptName');if(receiptName)receiptName.textContent='تقدر تصور الفاتورة بالموبايل أو تختار صورة أو PDF.';
  save();alert(file?'اتسجل الشراء واترفعت صورة الفاتورة بشكل خاص.':'اتسجل الشراء واتضاف للمخزون');
+}
+function addPurchaseInvoiceRow(){
+ const host=document.getElementById('purchaseInvoiceRows');if(!host)return;
+ const row=document.createElement('div');row.className='purchase-invoice-row grid card';row.style.margin='8px 0';
+ const unitOptions=['كيلو','نصف كيلو','ربع كيلو','جرام','قطعة','صينية','صاج','علبة','طبق','كيس','عبوة','كرتونة','باكت','لتر','ملليلتر'].map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+ row.innerHTML='<div class="field"><label>نوع الصنف</label><select class="pi-kind" onchange="setPurchaseRowChoiceList(this)"><option value="raw">خامة للتصنيع</option><option value="supplies">مستلزمات تشغيل</option><option value="ready">صنف جاهز من بره</option></select></div><div class="field"><label>الصنف</label><input class="pi-name" list="roflaRawChoices" placeholder="اختار أو اكتب اسم الصنف"></div><div class="field"><label>الكمية</label><input class="pi-qty" type="number" min="0.001" step="0.001" value="1"></div><div class="field"><label>الوحدة</label><select class="pi-unit">'+unitOptions+'</select></div><div class="field"><label>إجمالي سعر السطر بالجنيه</label><input class="pi-cost" type="number" min="0" step="0.01" placeholder="سعر الصنف بالكامل"></div><div class="field"><label>حد تنبيه المخزون (اختياري)</label><input class="pi-low" type="number" min="0" step="0.001" placeholder="مثال: 2"></div><button class="danger" type="button" onclick="this.closest(\\'.purchase-invoice-row\\').remove();updatePurchaseInvoiceTotal()">حذف السطر</button>';
+ host.appendChild(row);setPurchaseRowChoiceList(row.querySelector('.pi-kind'));
+ row.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',updatePurchaseInvoiceTotal));
+ updatePurchaseInvoiceTotal();
+}
+function updatePurchaseInvoiceTotal(){
+ const total=[...document.querySelectorAll('.purchase-invoice-row')].reduce((sum,row)=>sum+(Number(row.querySelector('.pi-cost')?.value)||0),0);
+ const e=document.getElementById('purchaseInvoiceTotal');if(e)e.textContent='إجمالي الفاتورة: '+money(total);
+}
+function savePurchaseInvoice(){
+ const rows=[...document.querySelectorAll('.purchase-invoice-row')],invoiceId=id(),invoiceNo=val('purchaseInvoiceNo').trim(),supplier=val('purchaseInvoiceSupplier').trim(),documentType=val('purchaseInvoiceDocument'),payMethod=val('purchaseInvoicePay'),note=val('purchaseInvoiceNote').trim(),expiryDate=val('purchaseExpiry');
+ if(!rows.length)return alert('أضف صنفاً واحداً على الأقل للفاتورة');
+ let lines=[],total=0;
+ for(const row of rows){
+  const kind=row.querySelector('.pi-kind').value,name=row.querySelector('.pi-name').value.trim(),qty=Number(row.querySelector('.pi-qty').value),unit=row.querySelector('.pi-unit').value,cost=Number(row.querySelector('.pi-cost').value),lowStock=Number(row.querySelector('.pi-low').value)||0;
+  if(!name||!Number.isFinite(qty)||qty<=0||!unit||!Number.isFinite(cost)||cost<0)return alert('راجع اسم الصنف والكمية والوحدة وإجمالي سعر كل سطر');
+  const key=(kind==='raw'?'خامة:':kind==='supplies'?'مستلزم:':'جاهز:')+name,existing=db.stock[key],stockUnit=existing?existing.unit:canonicalUnit(unit),stockQty=convertQty(qty,unit,stockUnit);
+  if(stockQty===null||!Number.isFinite(stockQty)||stockQty<=0)return alert('وحدة الشراء غير متوافقة مع وحدة المخزون للصنف '+name);
+  lines.push({kind,name,qty,unit,cost,lowStock,key,stockUnit,stockQty});total+=cost;
+ }
+ if(total<=0)return alert('إجمالي الفاتورة لازم يكون أكبر من صفر');
+ const paidRaw=val('purchaseInvoicePaid'),paidNow=paidRaw===''?(payMethod==='credit'?0:total):Number(paidRaw);
+ if(!Number.isFinite(paidNow)||paidNow<0||paidNow>total)return alert('إجمالي المدفوع لازم يكون من صفر لإجمالي الفاتورة');
+ const date=new Date().toISOString();
+ for(const line of lines){
+  const stock=db.stock[line.key]||(db.stock[line.key]={name:line.name,kind:line.kind,qty:0,unit:line.stockUnit,costPer:0,lowStock:0}),oldQty=Number(stock.qty)||0,oldCost=Number(stock.costPer)||0;
+  stock.qty=oldQty+line.stockQty;stock.costPer=(oldCost*oldQty+line.cost)/(stock.qty||1);
+  if(line.lowStock>0)stock.lowStock=line.lowStock;
+  const linePaid=total?paidNow*line.cost/total:0,purchaseId=id();
+  db.purchases.unshift({id:purchaseId,invoiceId,invoiceNo,documentType,name:line.name,kind:line.kind,qty:line.qty,unit:line.unit,stockQty:line.stockQty,stockUnit:line.stockUnit,cost:line.cost,paid:linePaid,due:Math.max(0,line.cost-linePaid),supplier,source:supplier,payMethod,note,expiryDate:line.kind==='raw'?expiryDate:'',date});
+  moveStock(line.name,line.kind==='raw'?'شراء خامة':line.kind==='supplies'?'شراء مستلزم تشغيل':'شراء صنف جاهز من بره',line.stockQty,line.stockUnit,supplier||'فاتورة شراء',invoiceId,line.key);
+  if(line.kind==='raw'&&expiryDate){db.expiryBatches=db.expiryBatches||[];db.expiryBatches.push({id:id(),name:line.name,qty:line.stockQty,unit:line.stockUnit,expiryDate,purchaseId,supplier,date});}
+  if(line.kind==='ready'){
+   let item=db.items.find(x=>x.name===line.name);
+   if(item){item.type='bought';if(!item.category||['شرقي','مخبوزات'].includes(item.category))item.category=/شوكولاتة|تمر محشي|مكسرات/i.test(line.name)?'مكسرات وشوكولاتة':'غربي';item.unit=line.stockUnit;}
+   else{const category=/شوكولاتة|تمر محشي|مكسرات/i.test(line.name)?'مكسرات وشوكولاتة':/جاتوه|تورتة|ميلفيه|إكلير|تشيز|براونيز|تارت|ماكرون|كوكيز|دونات|كيك|حلوى/i.test(line.name)?'غربي':'جاهز من بره';db.items.unshift({id:id(),name:line.name,type:'bought',category,unit:line.stockUnit,recipe:[]});}
+  }
+ }
+ if(payMethod==='cash'&&paidNow>0)cashMove('out',paidNow,'شراء فاتورة '+(invoiceNo||invoiceId),invoiceId);
+ clear(['purchaseInvoiceSupplier','purchaseInvoiceNo','purchaseInvoicePaid','purchaseInvoiceNote','purchaseExpiry']);
+ document.getElementById('purchaseInvoiceDocument').value='no_invoice';document.getElementById('purchaseInvoicePay').value='cash';
+ const host=document.getElementById('purchaseInvoiceRows');host.innerHTML='';addPurchaseInvoiceRow();save();
+ alert('تم حفظ فاتورة الشراء بإجمالي '+money(total)+' وتحديث المخزون وتوزيع المدفوع على الأصناف.');
 }
 function showReceiptName(){const f=document.getElementById('buyReceiptPhoto')?.files?.[0],e=document.getElementById('buyReceiptName');if(e)e.textContent=f?'الملف المختار: '+f.name:'تقدر تصور الفاتورة بالموبايل أو تختار صورة أو PDF.'}
 async function openPurchaseReceipt(path){const win=window.open('about:blank','_blank');const {data,error}=await supabaseClient.storage.from('rofla-purchase-receipts').createSignedUrl(path,300);if(error||!data?.signedUrl){if(win)win.close();return alert('تعذر فتح صورة الفاتورة. تأكد من تسجيل الدخول والاتصال بالإنترنت.')}if(win)win.location.href=data.signedUrl;else window.location.href=data.signedUrl}
