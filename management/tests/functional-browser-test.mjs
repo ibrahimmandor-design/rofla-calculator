@@ -221,7 +221,7 @@ async function runScenario(name, contextOptions) {
 
   // Sale, return and expense through the actual entry functions.
   await tab('sell');
-  await page.locator('#sellItem').selectOption(product.id);
+  await fill('sellItem', product.name);
   await fill('sellUnit', 'قطعة');
   await fill('sellQty', 3);
   await fill('sellPrice', 15);
@@ -356,7 +356,7 @@ async function runScenario(name, contextOptions) {
 
   // Customer credit, collection, daily close and audit trail.
   await tab('sell');
-  await page.locator('#sellItem').selectOption(product.id);
+  await fill('sellItem', product.name);
   await fill('sellUnit', 'قطعة');
   await fill('sellQty', 1);
   await fill('sellPrice', 5);
@@ -377,7 +377,7 @@ async function runScenario(name, contextOptions) {
   d = await state();
   check('credit sale return settlement', d.sales.find(x => x.id === creditSale.id).dueAmount === 0 && d.returns[0].creditAdjusted === 3, '3 EGP receivable cancelled; only 2 EGP refunded in cash');
   await tab('sell');
-  await page.locator('#sellItem').selectOption(product.id);
+  await fill('sellItem', product.name);
   await fill('sellUnit', 'قطعة');
   await fill('sellQty', 1);
   await fill('sellPrice', 5);
