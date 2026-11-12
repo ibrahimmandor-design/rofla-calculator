@@ -374,11 +374,12 @@ async function addPurchase(){
   if(uploadError)return alert('لم يتم تسجيل الشراء لأن رفع صورة الفاتورة لم يكتمل: '+uploadError.message+' — جرّب مرة أخرى أو احذف الصورة وسجّل الشراء بدونها.');
  }
  const stock=existing||(db.stock[key]={name,kind,qty:0,unit:stockUnit,costPer:0,lowStock:0}),old=Number(stock.qty)||0;
+ if(num('buyLow')>0)stock.lowStock=num('buyLow');
  stock.qty=old+stockQty;stock.costPer=(Number(stock.costPer||0)*old+cost)/(stock.qty||1);
  db.purchases.unshift({id:purchaseId,name,kind,qty,unit,stockQty,stockUnit,cost,paid,due:cost-paid,supplier:source,source,payMethod,note:val('buyNote').trim(),receiptPath,receiptName:file?.name||'',receiptType:file?.type||'',date});
  if(payMethod==='cash'&&paid>0)cashMove('out',paid,'شراء '+name,purchaseId);
  if(kind==='ready'){let purchasedItem=db.items.find(x=>x.name===name);if(purchasedItem){purchasedItem.type='bought';if(!purchasedItem.category)purchasedItem.category=/شوكولاتة|تمر محشي|مكسرات/i.test(name)?'مكسرات وشوكولاتة':'غربي';purchasedItem.unit=stockUnit;}else{const category=/شوكولاتة|تمر محشي|مكسرات/i.test(name)?'مكسرات وشوكولاتة':/جاتوه|تورتة|ميلفيه|إكلير|تشيز|براونيز|تارت|ماكرون|كوكيز|دونات|كيك|حلوى/i.test(name)?'غربي':'جاهز من بره';db.items.unshift({id:id(),name,type:'bought',category,unit:stockUnit,recipe:[]});}}moveStock(name,kind==='raw'?'شراء خامة':kind==='supplies'?'شراء مستلزم تشغيل':'شراء صنف جاهز من بره',stockQty,stockUnit,source||'شراء',purchaseId,key);
- clear(['buyName','buyQty','buyCost','buySupplier','buyPaid','buyNote','buyReceiptPhoto']);const receiptName=document.getElementById('buyReceiptName');if(receiptName)receiptName.textContent='تقدر تصور الفاتورة بالموبايل أو تختار صورة أو PDF.';
+ clear(['buyName','buyQty','buyCost','buySupplier','buyPaid','buyLow','buyNote','buyReceiptPhoto']);const receiptName=document.getElementById('buyReceiptName');if(receiptName)receiptName.textContent='تقدر تصور الفاتورة بالموبايل أو تختار صورة أو PDF.';
  save();alert(file?'اتسجل الشراء واترفعت صورة الفاتورة بشكل خاص.':'اتسجل الشراء واتضاف للمخزون');
 }
 function addPurchaseInvoiceRow(){
