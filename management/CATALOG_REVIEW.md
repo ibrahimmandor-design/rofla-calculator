@@ -39,3 +39,8 @@
 - لم يتم تحويل أي صنف إلى تصنيع داخل المحل دون وصفة مؤكدة.
 - لا يمكن اعتماد تكلفة أو هامش ربح حقيقي قبل إدخال أسعار الشراء والمصاريف الفعلية.
 - المراجعة الآلية تثبت سلامة الحقول وعدم تكرار الأسماء، لكنها لا تثبت أحجام العبوات أو طريقة بيع كل صنف؛ يلزم اعتمادها من بيانات المورد أو بطاقة الصنف.
+
+
+## V52 — 12 November 2026
+
+Expanded the ready-to-sell and in-house catalogs: +29 Eastern sweets, +68 bakery items made in-house, and +20 Western ready-made items. ROFLA continues to manufacture Eastern sweets and bakery products only; Western cakes/gateaux and chocolate remain purchased ready-made. Competitor references expanded from 100 to 138, with explicit category labels and published sizes/source links. No recipes, ingredient quantities, shop prices, or actual transactions were fabricated.
