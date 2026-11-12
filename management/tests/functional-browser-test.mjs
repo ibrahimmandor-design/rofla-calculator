@@ -392,6 +392,8 @@ async function runScenario(name, contextOptions) {
   await page.evaluate(() => window.recordCustomerPayment());
   d = await state();
   check('customer payment', d.sales.filter(x => x.customerName === 'عميل سداد').reduce((n,x)=>n+x.dueAmount,0) === 0 && d.customerPayments.length === 1, 'customer balance cleared');
+  await page.locator('#sellItem').selectOption(product.id);
+  await fill('sellUnit', 'قطعة');
   await fill('sellQty', 1);
   await fill('sellPrice', 7);
   await fill('sellCustomer', '');
