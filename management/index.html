@@ -310,10 +310,24 @@ const ROFLA_HALL_LEADS=[
  {name:'La Plume Hall',address:'Ankara St, Sheraton Al Matar, El Nozha, Cairo',phone:'',source:'Google Maps',sourceUrl:'https://www.google.com/maps/search/?api=1&query=La+Plume+Hall+Sheraton+Cairo',status:'غير متواصل'},
  {name:'قاعات رويال للأفراح',address:'Al Matar, El Nozha, Cairo',phone:'+20 11 11111232',source:'Google Maps',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Royal+Wedding+Halls+El+Nozha+Cairo',status:'غير متواصل'}
 ];
+const ROFLA_MARKET_LEADS=[
+ {name:'El Sultan Market',address:'20 Magdy St, New Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=El+Sultan+Market+20+Magdy+Street+New+Nozha+Cairo'},
+ {name:'Cairo Market',address:'13 Magdy St, New Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Cairo+Market+13+Magdy+Street+New+Nozha+Cairo'},
+ {name:'El Hassan Market',address:'20 Mohamed El Sebaey St, New Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=El+Hassan+Market+New+Nozha+Cairo'},
+ {name:'نجمة النزهة الجديدة',address:'4 Hassan El Debeiky St, New Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Najmet+El+Nozha+El+Gedida+Cairo'},
+ {name:'الفرجاني ماركت',address:'Mohamed Refaat / Taha Hussein area, New Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Fergany+Market+New+Nozha+Cairo'}
+];
+const ROFLA_HOTEL_LEADS=[
+ {name:'Hilton Cairo Heliopolis',address:'El-Orouba, Sheraton Al Matar, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Hilton+Cairo+Heliopolis'},
+ {name:'Concorde El Salam Cairo',address:'69 Abdel Hamid Badawy St, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Concorde+El+Salam+Cairo'},
+ {name:'The Guard Hotel',address:'Sheraton Al Matar, El Nozha, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=The+Guard+Hotel+Cairo'},
+ {name:'Novotel Cairo Airport',address:'Cairo Airport, Sheraton Al Matar, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Novotel+Cairo+Airport'},
+ {name:'Waldorf Astoria Cairo Heliopolis',address:'El-Orouba, Sheraton Al Matar, Cairo',phone:'',source:'قائمة فرص المنطقة',sourceUrl:'https://www.google.com/maps/search/?api=1&query=Waldorf+Astoria+Cairo+Heliopolis'}
+];
 const WHOLESALE_STATUSES=['مرشح جديد','تمت الزيارة','تم التواصل','تم إرسال عينة','عرض سعر مرسل','طلب تجريبي','عميل نشط','مؤجل','غير مناسب'];
 function ensureWholesaleLeadRecords(){
  db.wholesaleLeads=db.wholesaleLeads||[];
- const seeds=[...ROFLA_CAFE_LEADS.map((x,i)=>({...x,id:'seed-cafe-'+i,kind:'cafe'})),...ROFLA_HALL_LEADS.map((x,i)=>({...x,id:'seed-hall-'+i,kind:'hall'}))];
+ const seeds=[...ROFLA_CAFE_LEADS.map((x,i)=>({...x,id:'seed-cafe-'+i,kind:'cafe'})),...ROFLA_MARKET_LEADS.map((x,i)=>({...x,id:'seed-market-'+i,kind:'market'})),...ROFLA_HOTEL_LEADS.map((x,i)=>({...x,id:'seed-hotel-'+i,kind:'hotel'})),...ROFLA_HALL_LEADS.map((x,i)=>({...x,id:'seed-hall-'+i,kind:'hall'}))];
  seeds.forEach(x=>{if(!db.wholesaleLeads.some(y=>y.id===x.id||((y.name||'')===x.name&&(y.address||'')===x.address)))db.wholesaleLeads.push({...x,status:'مرشح جديد',contactPerson:'',followUpDate:'',products:'',notes:'',lastContactAt:''})});
 }
 function renderWholesaleLeadGroup(kind,host){
