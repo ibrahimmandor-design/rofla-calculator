@@ -42,7 +42,9 @@ jobs:
         run: |
           url="https://ibrahimmandor-design.github.io/rofla-calculator/management/"
           for attempt in $(seq 1 36); do
-            if curl -fsSL "$url" | grep -q 'ROFLA_BUILD_20261112_INGREDIENT_TRACE_V36'; then
+            expected_marker=$(grep -o 'ROFLA_BUILD_[A-Z0-9_]*' management/index.html | head -1)
+          if [ -z "$expected_marker" ]; then echo "Build marker missing from source."; exit 1; fi
+          if curl -fsSL "$url" | grep -q "$expected_marker"; then
               echo "The expected build is live."
               exit 0
             fi
