@@ -171,7 +171,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#makeItem').selectOption(product.id);
   await page.evaluate(() => window.renderRecipeInputs());
   await fill('makeOutput', 10);
-  await page.locator('#makeOutputUnit').selectOption({ label: 'قطعة' });
+  await page.locator('#makeOutputUnit').fill('قطعة');
   await fill('makeWasteQty', 1);
   await fill('makeLeftQty', 2);
   await page.locator('.actual').fill('0.5');
@@ -213,7 +213,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#makeItem').selectOption(secondProduct.id);
   await page.evaluate(() => renderRecipeInputs());
   await fill('makeOutput', 5);
-  await page.locator('#makeOutputUnit').selectOption({ label: 'قطعة' });
+  await page.locator('#makeOutputUnit').fill('قطعة');
   await page.locator('.actual').fill('2');
   await page.evaluate(() => saveProduction());
   d = await state();
