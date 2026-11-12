@@ -41,11 +41,11 @@ jobs:
       - name: Wait until this commit is live on GitHub Pages
         run: |
           url="https://ibrahimmandor-design.github.io/rofla-calculator/management/"
-          for attempt in $(seq 1 36); do
-            expected_marker=$(grep -o 'ROFLA_BUILD_[A-Z0-9_]*' management/index.html | head -1)
+          expected_marker=$(grep -o 'ROFLA_BUILD_[A-Z0-9_]*' management/index.html | head -1)
           if [ -z "$expected_marker" ]; then echo "Build marker missing from source."; exit 1; fi
-          if curl -fsSL "$url" | grep -q "$expected_marker"; then
-              echo "The expected build is live."
+          for attempt in $(seq 1 36); do
+            if curl -fsSL "$url" | grep -Fq "$expected_marker"; then
+              echo "The expected build is live: $expected_marker"
               exit 0
             fi
             echo "Waiting for GitHub Pages deployment ($attempt/36)..."
