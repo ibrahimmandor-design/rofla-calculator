@@ -130,9 +130,9 @@ async function runScenario(name, contextOptions) {
   await fill('buyUnit', 'قطعة');
   await fill('buyCost', 10);
   await page.evaluate(() => window.addPurchase());
-  d = await state();
+  let d = await state();
   check('ready purchase blocks Western cake even when chocolate-flavoured',
-    d.purchases.length === 1 && !d.stock['جاهز:جاتوه شوكولاتة'],
+    d.purchases.length === 0 && !d.stock['جاهز:جاتوه شوكولاتة'],
     'only standalone chocolate boxes or pieces can be purchased ready-made');
   check('quick purchase choices follow purchase type', await page.locator('#buyName').getAttribute('list') === 'roflaReadyChoices', 'ready products list');
   await page.locator('#buyKind').selectOption('supplies');
@@ -151,7 +151,7 @@ async function runScenario(name, contextOptions) {
   await page.locator('#buyPayMethod').selectOption('cash');
   await fill('buyPaid', 40);
   await page.evaluate(() => window.addPurchase());
-  let d = await state();
+  d = await state();
   check('purchase', d.stock['خامة:دقيق اختبار']?.qty === 2 && d.purchases.length === 1, '2 kg flour stock; invoice saved');
   check('purchased materials appear in stock flow summary', (await page.locator('#stockFlowSummary').innerText()).includes('دقيق اختبار'), 'purchased raw material listed');
   check('purchase cash movement', d.cashMovements.filter(x => x.kind === 'out').reduce((n,x)=>n+x.amount,0) === 40, '40 EGP paid from drawer');
